@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 load_dotenv()
 
@@ -26,26 +27,55 @@ class User(db.Model):
     age = db.Column(db.Integer, nullable=False)
     gender = db.Column(db.String(10), nullable=False)
     
+
 @app.route("/home")
 @app.route("/")
 def home():
     return render_template("home.html")
 
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in first.", "error")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route("/8-bit")
+@login_required
+def bit():
+    return render_template("bit.html")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
+    if "user_id" in session:
+        flash("You are already logged in.", "info")
+        return redirect(url_for("bit"))
+
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
 
         user = User.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password, password):
-            return flash("Login successful!", "info")
-             
+            session["user_id"] = user.id
+            session["username"] = user.username
+            flash("Login successful!", "info")
+            return redirect(url_for("bit"))
+        else:
+            flash("Invalid username or password", "error")
 
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out.", "info")
+    return redirect(url_for("login"))
 
 @app.route("/register", methods=["GET", "POST"])
 def register():

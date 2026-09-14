@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}8-bit Studios{% endblock %}
+
+
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <a href="{{ url_for('logout') }}">Logout</a>
+    <h1>Play Games</h1>
+    <h1>Spend Coins</h1>
+{% endblock %}
