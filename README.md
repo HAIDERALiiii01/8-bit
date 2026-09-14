@@ -1,7 +1,7 @@
 # 🕹️ 8-BIT Vending Machine
 
 \<p align="center">
-&#x20; \<img src="[https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDE2cGdmNXZmMXM0bXFibzV5cTJkcTl0d2J2cGEycjFrc3BjZHN6ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/z2D26GunfUK1W/giphy.gif](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDE2cGdmNXZmMXM0bXFibzV5cTJkcTl0d2J2cGEycjFrc3BjZHN6ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/z2D26GunfUK1W/giphy.gif)" alt="8-BIT Vending Machine" width="800"/>
+&#x20; \<img src="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bHphdzg3YmY5cmczY3VpcnliNHlnYmVnZnhqbWY4enJyeG43MHpnMyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uchGqpI5drRdK/giphy.gif" alt="8-BIT Vending Machine" width="800"/>
 \</p>
 
 > **🕹️ Buy snacks. Play games. Earn coins. Get your reward.**
