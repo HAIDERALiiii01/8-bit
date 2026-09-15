@@ -17,6 +17,8 @@
 
     <form method="POST" action="/register">
 
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <label>Username:</label>
         <input type="text" name="username" required minlength="3" maxlength="20">
 
