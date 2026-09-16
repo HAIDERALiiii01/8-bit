@@ -20,12 +20,12 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <label>Username:</label>
-        <input type="text" name="username">
+        <input type="text" name="username" required value="{{ form.username or '' }}">
 
         <br><br>
 
         <label>Password:</label>
-        <input type="password" name="password">
+        <input type="password" name="password" required>
 
         <br><br>
 

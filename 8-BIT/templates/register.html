@@ -20,30 +20,37 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <label>Username:</label>
-        <input type="text" name="username" required minlength="3" maxlength="20">
+        <input type="text" name="username" required minlength="3" maxlength="20"
+               value="{{ form.username or '' }}">
 
         <br><br>
 
         <label>Email:</label>
-        <input type="email" name="email" required pattern="[a-zA-Z0-9._%+-]+@gmail\.com" title="Only gmail.com addresses are allowed">
+        <input type="email" name="email" required
+               pattern="[a-zA-Z0-9._%+-]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]"
+               title="Only gmail.com addresses are allowed"
+               value="{{ form.email or '' }}">
 
         <br><br>
 
         <label>Password:</label>
-        <input type="password" name="password" required minlength="8" title="Password must be at least 8 characters">
+        <input type="password" name="password" required minlength="8"
+               pattern="(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}"
+               title="At least 8 characters, including a letter, a number, and a special character">
 
         <br><br>
 
         <label>Age:</label>
-        <input type="number" name="age" required min="13" max="120">
+        <input type="number" name="age" required min="13" max="120"
+               value="{{ form.age or '' }}">
 
         <br><br>
 
         <label>Gender:</label>
         <select name="gender" required>
             <option value="">--Select--</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="male" {% if form.gender == "male" %}selected{% endif %}>Male</option>
+            <option value="female" {% if form.gender == "female" %}selected{% endif %}>Female</option>
         </select>
 
         <br><br>

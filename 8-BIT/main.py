@@ -54,7 +54,7 @@ def home():
 def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip().lower()
-        password = request.form.get("password")
+        password = request.form.get("password", "")
 
         user = User.query.filter_by(username=username).first()
 
@@ -63,10 +63,12 @@ def login():
             session["username"] = user.username
             flash("Login successful!", "info")
             return redirect(url_for("bit.bit"))
-        else:
-            flash("Invalid username or password", "error")
 
-    return render_template("login.html")
+        flash("Invalid username or password", "error")
+        # Keep the username so the user only retypes the password.
+        return render_template("login.html", form={"username": username})
+
+    return render_template("login.html", form={})
 
 
 @app.route("/logout")
@@ -84,50 +86,56 @@ def register():
     if request.method == "POST":
         username = request.form.get("username", "").strip().lower()
         email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password")
-        age = request.form.get("age")
+        password = request.form.get("password", "")
+        age = request.form.get("age", "").strip()
         gender = request.form.get("gender", "").strip().lower()
 
-        if not username or not email or not password or not age or not gender:
-            flash("Please fill in all the details.", "error")
-            return redirect(url_for("register"))
+        # Everything except the password is sent back to re-fill the form.
+        form = {
+            "username": username,
+            "email": email,
+            "age": age,
+            "gender": gender,
+        }
 
-        if len(username) > 100 or len(email) > 100:
-            flash("Username or email is too long.", "error")
-            return redirect(url_for("register"))
+        def fail(message):
+            flash(message, "error")
+            return render_template("register.html", form=form)
+
+        if not username or not email or not password or not age or not gender:
+            return fail("Please fill in all the details.")
+
+        if len(username) < 3 or len(username) > 20:
+            return fail("Username must be between 3 and 20 characters.")
+
+        if len(email) > 100:
+            return fail("Email is too long.")
 
         if not re.match(r"^[^@\s]+@gmail\.com$", email):
-            flash("Enter a valid Gmail address.", "error")
-            return redirect(url_for("register"))
+            return fail("Enter a valid Gmail address.")
 
         if len(password) < 8:
-            flash("Password must be at least 8 characters.", "error")
-            return redirect(url_for("register"))
+            return fail("Password must be at least 8 characters.")
 
         if not re.search(r"[A-Za-z]", password) or not re.search(r"\d", password) or not re.search(r"[^A-Za-z0-9]", password):
-            flash("Password must contain letters, numbers, and a special character.", "error")
-            return redirect(url_for("register"))
+            return fail("Password must contain letters, numbers, and a special character.")
 
         try:
             age = int(age)
         except ValueError:
-            flash("Age must be a number", "error")
-            return redirect(url_for("register"))
+            return fail("Age must be a number")
 
         if age < 13 or age > 120:
-            flash("Age must be between 13 and 120", "error")
-            return redirect(url_for("register"))
+            return fail("Age must be between 13 and 120")
 
         if gender not in ("male", "female"):
-            flash("Invalid gender selection", "error")
-            return redirect(url_for("register"))
+            return fail("Invalid gender selection")
 
         existing_user = User.query.filter(
             (User.username == username) | (User.email == email)
         ).first()
         if existing_user:
-            flash("Username or email already registered", "error")
-            return redirect(url_for("register"))
+            return fail("Username or email already registered")
 
         hashed_password = generate_password_hash(password)
         user = User(username=username, email=email, password=hashed_password, age=age, gender=gender)
@@ -136,13 +144,12 @@ def register():
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            flash("Username or email already registered", "error")
-            return redirect(url_for("register"))
+            return fail("Username or email already registered")
 
         flash("Registration successful!", "info")
         return redirect(url_for("login"))
 
-    return render_template("register.html")
+    return render_template("register.html", form={})
 
 
 with app.app_context():
