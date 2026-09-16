@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}8-bit Studios{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 
 {% block content %}
@@ -13,6 +13,5 @@
         {% endif %}
     {% endwith %}
     <a href="{{ url_for('logout') }}">Logout</a>
-    <h1>Play Games</h1>
-    <h1>Spend Coins</h1>
+    <h1>Welcome to Dashboard, {{ session.username }}</h1>
 {% endblock %}

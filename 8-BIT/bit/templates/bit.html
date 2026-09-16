@@ -13,6 +13,14 @@
         {% endif %}
     {% endwith %}
     <a href="{{ url_for('logout') }}">Logout</a>
-    <h1>Play Games</h1>
-    <h1>Spend Coins</h1>
+    <h1>Welcome, {{ session.username }}</h1>
+
+    <div class="options">
+        <a href="{{ url_for('bit.vending_machine') }}" class="option">Vending Machine</a>
+        <a href="{{ url_for('bit.games') }}" class="option">Play Games</a>
+
+        {% if session.get('is_admin') %}
+            <a href="{{ url_for('bit.dashboard') }}" class="option">Dashboard</a>
+        {% endif %}
+    </div>
 {% endblock %}

@@ -8,7 +8,7 @@ import os
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
-
+from datetime import timedelta
 from auth import login_required, redirect_if_logged_in
 from bit.bit import bit_bp
 
@@ -21,6 +21,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://postgres:{password}@localhost/vending_machine"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 
 db = SQLAlchemy(app)
 csrf = CSRFProtect(app)
@@ -38,6 +39,7 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     age = db.Column(db.Integer, nullable=False)
     gender = db.Column(db.String(10), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
 
 
 @app.route("/home")
@@ -46,6 +48,7 @@ def home():
     if "user_id" in session:
         return redirect(url_for("bit.bit"))
     return render_template("home.html")
+        
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -59,8 +62,10 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password, password):
+            session.permanent = True  # <--- makes the permanent session
             session["user_id"] = user.id
             session["username"] = user.username
+            session["is_admin"] = user.is_admin
             flash("Login successful!", "info")
             return redirect(url_for("bit.bit"))
 

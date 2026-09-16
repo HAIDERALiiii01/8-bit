@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Games{% endblock %}
+
+
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <a href="{{ url_for('logout') }}">Logout</a>
+    <h1>Welcome to Games, {{ session.username }}</h1>
+{% endblock %}
