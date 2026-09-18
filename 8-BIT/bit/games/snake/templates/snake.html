@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>8-BIT SNAKE</title>
+<!-- Present only if your app uses Flask-WTF's CSRFProtect; harmless empty string otherwise -->
+<meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0716;
+    --bg-panel: #150f2e;
+    --border: #4d3b8c;
+    --neon-pink: #ff4fa3;
+    --neon-cyan: #34e2e2;
+    --neon-yellow: #ffd447;
+    --neon-green: #7cff6b;
+    --text: #f2eefc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-deep);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,79,163,0.12), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(52,226,226,0.12), transparent 40%);
+    font-family: "Press Start 2P", monospace;
+    color: var(--text);
+    padding: 20px;
+  }
+
+  .cabinet {
+    background: var(--bg-panel);
+    border: 4px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px 26px;
+    width: 100%;
+    max-width: 640px;
+    box-shadow:
+      0 0 0 4px #0a0716,
+      0 0 0 8px var(--neon-green),
+      0 18px 40px rgba(0,0,0,0.6);
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    text-align: center;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px rgba(255,212,71,0.7), 2px 2px 0 #6b4a00;
+    letter-spacing: 1px;
+  }
+  p.sub {
+    margin: 0 0 18px;
+    text-align: center;
+    font-size: 9px;
+    color: var(--neon-cyan);
+    letter-spacing: 1px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+  .stat-row span.label { color: var(--neon-cyan); }
+  .stat-row span.value { color: var(--text); }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  button {
+    font-family: "Press Start 2P", monospace;
+    font-size: 10px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 3px solid #000;
+    color: #1a0a12;
+    background: var(--neon-green);
+    cursor: pointer;
+    box-shadow: 0 4px 0 #2f7a26;
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+  }
+  button.secondary {
+    background: var(--neon-pink);
+    box-shadow: 0 4px 0 #8f2560;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.08); }
+  button:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #2f7a26;
+  }
+  button.secondary:active:not(:disabled) { box-shadow: 0 1px 0 #8f2560; }
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .screen-wrap {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 3px solid #000;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    image-rendering: pixelated;
+    background: #0c0820;
+  }
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.18) 0px,
+      rgba(0,0,0,0.18) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+    mix-blend-mode: multiply;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(10, 7, 22, 0.82);
+    text-align: center;
+    padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .overlay .big { font-size: 14px; color: var(--neon-pink); text-shadow: 0 0 6px rgba(255,79,163,0.6); }
+  .overlay .small { font-size: 9px; color: var(--neon-cyan); }
+
+  .result {
+    margin-top: 16px;
+    min-height: 18px;
+    font-size: 11px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .result.win { color: var(--neon-yellow); text-shadow: 0 0 6px rgba(255,212,71,0.7); }
+
+  .coin-award {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 6px rgba(52,226,226,0.7);
+  }
+
+  .coin-display {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px rgba(255,212,71,0.5);
+  }
+
+  @media (max-width: 420px) {
+    .stat-row { font-size: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cabinet">
+  <h1>&#128013; 8-BIT SNAKE</h1>
+  <p class="sub">ARROW KEYS TO MOVE &mdash; EAT TO GROW</p>
+
+  <div class="stat-row">
+    <span><span class="label">SCORE </span><span class="value" id="scoreVal">0</span></span>
+    <span><span class="label">HIGH </span><span class="value" id="highVal">{{ '%04d' % high_score }}</span></span>
+  </div>
+
+  <div class="controls">
+    <button id="startBtn">START GAME</button>
+    <button id="muteBtn" class="secondary">&#128264; MUSIC OFF</button>
+  </div>
+
+  <div class="screen-wrap">
+    <canvas id="gameCanvas" width="560" height="560"></canvas>
+    <div class="scanlines"></div>
+    <div class="overlay" id="overlay">
+      <div class="big">GAME OVER</div>
+      <div class="small" id="overlayScore">SCORE: 0</div>
+    </div>
+  </div>
+
+  <div id="result" class="result"></div>
+  <div id="coinDisplay" class="coin-display">COINS: {{ '%04d' % coins }}</div>
+
+  <!-- Background music: drop a file named bgm.mp3 into the snake blueprint's static folder. -->
+  <audio id="bgm" loop preload="auto">
+    <source src="{{ url_for('bit.snake.static', filename='bgm.mp3') }}" type="audio/mpeg">
+  </audio>
+  <!-- Game-over sting: drop a file named game_over.mp3 alongside bgm.mp3. Not looped -- plays once. -->
+  <audio id="gameOverSfx" preload="auto">
+    <source src="{{ url_for('bit.snake.static', filename='game_over.mp3') }}" type="audio/mpeg">
+  </audio>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const GRID_COUNT = 28;               // must match GRID_COUNT in snake.py
+const CELL = canvas.width / GRID_COUNT;
+const TICK_MS = 100;                 // same pace as the original turtle version
+
+const COLOR_BODY = '#7cff6b';
+const COLOR_HEAD = '#c9ffb8';
+const COLOR_FOOD = '#34e2e2';
+const COLOR_BG = '#0c0820';
+const COLOR_GRID = 'rgba(77,59,140,0.18)';
+
+let snake, direction, nextDirection, food, score, gameLoopId, running;
+
+function resetState() {
+  const mid = Math.floor(GRID_COUNT / 2);
+  snake = [{ x: mid, y: mid }, { x: mid - 1, y: mid }, { x: mid - 2, y: mid }];
+  direction = { x: 1, y: 0 };
+  nextDirection = { x: 1, y: 0 };
+  score = 0;
+  placeFood();
+  document.getElementById('scoreVal').textContent = score;
+}
+
+function placeFood() {
+  let candidate;
+  do {
+    candidate = {
+      x: Math.floor(Math.random() * GRID_COUNT),
+      y: Math.floor(Math.random() * GRID_COUNT)
+    };
+  } while (snake.some(seg => seg.x === candidate.x && seg.y === candidate.y));
+  food = candidate;
+}
+
+function drawGrid() {
+  ctx.fillStyle = COLOR_BG;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = COLOR_GRID;
+  ctx.lineWidth = 1;
+  for (let i = 1; i < GRID_COUNT; i++) {
+    const p = Math.round(i * CELL) + 0.5;
+    ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(canvas.width, p); ctx.stroke();
+  }
+}
+
+function drawCell(x, y, color, inset = 2) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x * CELL + inset, y * CELL + inset, CELL - inset * 2, CELL - inset * 2);
+}
+
+function draw() {
+  drawGrid();
+  drawCell(food.x, food.y, COLOR_FOOD, 3);
+  snake.forEach((seg, i) => drawCell(seg.x, seg.y, i === 0 ? COLOR_HEAD : COLOR_BODY));
+}
+
+function tick() {
+  direction = nextDirection;
+  const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+  const hitWall = head.x < 0 || head.x >= GRID_COUNT || head.y < 0 || head.y >= GRID_COUNT;
+  const hitSelf = snake.some(seg => seg.x === head.x && seg.y === head.y);
+  if (hitWall || hitSelf) {
+    endGame();
+    return;
+  }
+
+  snake.unshift(head);
+  if (head.x === food.x && head.y === food.y) {
+    score += 1;
+    document.getElementById('scoreVal').textContent = score;
+    placeFood();
+  } else {
+    snake.pop();
+  }
+  draw();
+}
+
+function startGame() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('result').textContent = '';
+  document.getElementById('result').className = 'result';
+  document.getElementById('startBtn').disabled = true;
+  resetState();
+  draw();
+  running = true;
+  tryPlayMusic();
+  gameLoopId = setInterval(tick, TICK_MS);
+}
+
+function endGame() {
+  clearInterval(gameLoopId);
+  running = false;
+  document.getElementById('overlayScore').textContent = 'SCORE: ' + score;
+  document.getElementById('overlay').classList.add('show');
+  playGameOverSequence();
+  reportScore(score);
+}
+
+async function reportScore(finalScore) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const resultEl = document.getElementById('result');
+  let res;
+  try {
+    res = await fetch('{{ url_for("bit.snake.finish_run") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken // ignored if your app doesn't check it
+      },
+      body: JSON.stringify({ score: finalScore })
+    });
+  } catch (err) {
+    resultEl.textContent = `NETWORK ERROR: ${err.message}`;
+    document.getElementById('startBtn').disabled = false;
+    return;
+  }
+
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body && body.error) detail = body.error;
+    } catch {
+      // response wasn't JSON -- keep the status code
+    }
+    resultEl.textContent = `COULD NOT SAVE RUN: ${detail}`;
+    console.error('finish_run failed:', res.status, detail);
+    document.getElementById('startBtn').disabled = false;
+    return;
+  }
+
+  const data = await res.json();
+  if (data.awarded > 0) {
+    resultEl.className = 'result win';
+    resultEl.textContent = data.new_high_score ? 'NEW HIGH SCORE!' : 'RUN COMPLETE';
+    const coinLine = document.createElement('span');
+    coinLine.className = 'coin-award';
+    coinLine.textContent = `YOU WON ${data.awarded} COINS!`;
+    resultEl.appendChild(coinLine);
+  } else {
+    resultEl.textContent = 'NO FOOD EATEN -- NO COINS THIS RUN';
+  }
+
+  document.getElementById('highVal').textContent = String(data.high_score).padStart(4, '0');
+  document.getElementById('coinDisplay').textContent = 'COINS: ' + String(data.coins).padStart(4, '0');
+  document.getElementById('startBtn').disabled = false;
+}
+
+const DIRECTION_KEYS = {
+  ArrowUp:    { x: 0, y: -1 }, w: { x: 0, y: -1 },
+  ArrowDown:  { x: 0, y: 1 },  s: { x: 0, y: 1 },
+  ArrowLeft:  { x: -1, y: 0 }, a: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },  d: { x: 1, y: 0 }
+};
+
+document.addEventListener('keydown', (e) => {
+  if (!running) return;
+  const wanted = DIRECTION_KEYS[e.key];
+  if (!wanted) return;
+  // can't reverse directly into your own neck
+  if (wanted.x === -direction.x && wanted.y === -direction.y) return;
+  nextDirection = wanted;
+  e.preventDefault();
+});
+
+// ---- background music: swap the bgm.mp3 / game_over.mp3 files, everything else just works ----
+const bgm = document.getElementById('bgm');
+const gameOverSfx = document.getElementById('gameOverSfx');
+const muteBtn = document.getElementById('muteBtn');
+let musicWanted = true;
+
+function tryPlayMusic() {
+  if (!musicWanted) return;
+  const playPromise = bgm.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      // no track present, or browser blocked it -- just stay silent
+    });
+  }
+}
+
+// Stops the main loop and plays the game-over sting once. The main loop does
+// NOT resume automatically -- it only comes back when the player hits Start
+// again (startGame() below already calls tryPlayMusic()).
+function playGameOverSequence() {
+  bgm.pause();
+  if (!musicWanted) return; // music's off -- don't play anything at all
+
+  gameOverSfx.currentTime = 0;
+  const playPromise = gameOverSfx.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      // sting missing or blocked -- fine, just stay silent until Start is pressed
+    });
+  }
+}
+
+muteBtn.addEventListener('click', () => {
+  musicWanted = !musicWanted;
+  if (musicWanted) {
+    muteBtn.textContent = '\u{1F50A} MUSIC ON';
+    tryPlayMusic();
+  } else {
+    muteBtn.textContent = '\u{1F508} MUSIC OFF';
+    bgm.pause();
+    gameOverSfx.pause();
+  }
+});
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+
+resetState();
+draw();
+</script>
+
+</body>
+</html>

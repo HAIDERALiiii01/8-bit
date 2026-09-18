@@ -1,62 +1,66 @@
 {% extends "base.html" %}
-{% block title %}Register Page{% endblock %}
-
+{% block title %}Register{% endblock %}
 
 {% block content %}
+<div class="cabinet cabinet--wide">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
 
-    <h1>Register</h1>
+    <h1 class="marquee">&#127918; NEW PLAYER</h1>
+    <p class="subtitle">CREATE YOUR PROFILE</p>
 
-    <form method="POST" action="/register">
-
+    <form class="arcade-form" method="POST" action="/register">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label>Username:</label>
-        <input type="text" name="username" required minlength="3" maxlength="20"
-               value="{{ form.username or '' }}">
+        <div class="field-group">
+            <label for="username">USERNAME</label>
+            <input type="text" id="username" name="username" required minlength="3" maxlength="20"
+                   value="{{ form.username or '' }}">
+        </div>
 
-        <br><br>
+        <div class="field-group">
+            <label for="email">EMAIL</label>
+            <input type="email" id="email" name="email" required
+                   pattern="[a-zA-Z0-9._%+-]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]"
+                   title="Only gmail.com addresses are allowed"
+                   value="{{ form.email or '' }}">
+            <span class="hint">Gmail addresses only</span>
+        </div>
 
-        <label>Email:</label>
-        <input type="email" name="email" required
-               pattern="[a-zA-Z0-9._%+-]+@[gG][mM][aA][iI][lL]\.[cC][oO][mM]"
-               title="Only gmail.com addresses are allowed"
-               value="{{ form.email or '' }}">
+        <div class="field-group">
+            <label for="password">PASSWORD</label>
+            <input type="password" id="password" name="password" required minlength="8"
+                   pattern="(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}"
+                   title="At least 8 characters, including a letter, a number, and a special character">
+            <span class="hint">8+ characters, with a letter, a number, and a symbol</span>
+        </div>
 
-        <br><br>
+        <div class="field-group">
+            <label for="age">AGE</label>
+            <input type="number" id="age" name="age" required min="13" max="120"
+                   value="{{ form.age or '' }}">
+        </div>
 
-        <label>Password:</label>
-        <input type="password" name="password" required minlength="8"
-               pattern="(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}"
-               title="At least 8 characters, including a letter, a number, and a special character">
+        <div class="field-group">
+            <label for="gender">GENDER</label>
+            <select id="gender" name="gender" required>
+                <option value="">--Select--</option>
+                <option value="male" {% if form.gender == "male" %}selected{% endif %}>Male</option>
+                <option value="female" {% if form.gender == "female" %}selected{% endif %}>Female</option>
+            </select>
+        </div>
 
-        <br><br>
-
-        <label>Age:</label>
-        <input type="number" name="age" required min="13" max="120"
-               value="{{ form.age or '' }}">
-
-        <br><br>
-
-        <label>Gender:</label>
-        <select name="gender" required>
-            <option value="">--Select--</option>
-            <option value="male" {% if form.gender == "male" %}selected{% endif %}>Male</option>
-            <option value="female" {% if form.gender == "female" %}selected{% endif %}>Female</option>
-        </select>
-
-        <br><br>
-
-        <button type="submit">Register</button>
-
+        <button type="submit" class="btn btn--secondary btn--block">REGISTER</button>
     </form>
 
+    <p class="form-footer">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+    <a class="back-link" href="{{ url_for('home') }}">&larr; Back to home</a>
+</div>
 {% endblock %}

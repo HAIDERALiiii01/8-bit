@@ -1,17 +1,17 @@
-{% extends "base.html" %}
+{% extends "bit_base.html" %}
 {% block title %}Dashboard{% endblock %}
 
-
 {% block content %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <a href="{{ url_for('logout') }}">Logout</a>
-    <h1>Welcome to Dashboard, {{ session.username }}</h1>
+<section class="lobby lobby--narrow">
+    <h1 class="marquee">ADMIN DASHBOARD</h1>
+    <p class="subtitle">Welcome, {{ session.username }}</p>
+
+    <div class="terminal-box">
+        <p class="terminal-line">&gt; system online</p>
+        <p class="terminal-line">&gt; no panels configured yet</p>
+        <p class="terminal-line blink">&gt; _</p>
+    </div>
+
+    <a class="back-link" href="{{ url_for('bit.bit') }}">&larr; Back to lobby</a>
+</section>
 {% endblock %}

@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template
 from auth import login_required, admin_required
+from bit.games.race.race import race_bp
+from bit.games.snake.snake import snake_bp
+
 
 bit_bp = Blueprint(
     "bit", __name__,
@@ -7,6 +10,8 @@ bit_bp = Blueprint(
     static_folder="static",
     static_url_path="/bit/static"
 )
+bit_bp.register_blueprint(race_bp)
+bit_bp.register_blueprint(snake_bp)
 
 
 @bit_bp.route("/8-bit")

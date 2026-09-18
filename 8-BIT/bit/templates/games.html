@@ -1,17 +1,23 @@
-{% extends "base.html" %}
+{% extends "bit_base.html" %}
 {% block title %}Games{% endblock %}
 
-
 {% block content %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <a href="{{ url_for('logout') }}">Logout</a>
-    <h1>Welcome to Games, {{ session.username }}</h1>
+<section class="lobby">
+    <h1 class="marquee">GAME SELECT</h1>
+    <p class="subtitle blink">PRESS START</p>
+
+    <div class="arcade-row">
+        <a href="{{ url_for('bit.race.race') }}" class="cabinet-card">
+            <div class="cabinet-card__screen"><span>&#128034;</span></div>
+            <span class="cabinet-card__label">TURTLE RACE</span>
+        </a>
+
+        <a href="{{ url_for('bit.snake.snake') }}" class="cabinet-card">
+            <div class="cabinet-card__screen"><span>&#128013;</span></div>
+            <span class="cabinet-card__label">SNAKE</span>
+        </a>
+    </div>
+
+    <a class="back-link" href="{{ url_for('bit.bit') }}">&larr; Back to lobby</a>
+</section>
 {% endblock %}

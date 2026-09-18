@@ -1,0 +1,263 @@
+/* ==========================================================================
+   8-BIT STUDIOS -- shared design system
+   Same token set as the game cabinets (race/snake) so the whole site reads
+   as one arcade, not a game with a bolted-on login page.
+   ========================================================================== */
+
+:root {
+  --bg-deep: #0a0716;
+  --bg-panel: #150f2e;
+  --bg-screen: #0c0820;
+  --border: #4d3b8c;
+  --neon-pink: #ff4fa3;
+  --neon-cyan: #34e2e2;
+  --neon-yellow: #ffd447;
+  --neon-green: #7cff6b;
+  --text: #f2eefc;
+  --text-dim: #b9aee0;
+  --font-display: "Press Start 2P", monospace;
+  --font-body: "VT323", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(255, 79, 163, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(52, 226, 226, 0.12), transparent 40%);
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: var(--text);
+  padding: 24px;
+}
+
+a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+}
+a:hover, a:focus-visible { text-decoration: underline; }
+
+/* Visible keyboard focus everywhere, arcade-flavored */
+:focus-visible {
+  outline: 3px solid var(--neon-yellow);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------- */
+/* Cabinet shell -- the panel every page sits inside                     */
+/* -------------------------------------------------------------------- */
+
+.cabinet {
+  background: var(--bg-panel);
+  border: 4px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 26px 30px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow:
+    0 0 0 4px #0a0716,
+    0 0 0 8px var(--neon-pink),
+    0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+.cabinet--wide { max-width: 620px; }
+
+.marquee {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  text-align: center;
+  color: var(--neon-yellow);
+  text-shadow: 0 0 6px rgba(255, 212, 71, 0.7), 2px 2px 0 #6b4a00;
+  letter-spacing: 1px;
+  line-height: 1.5;
+}
+
+.marquee .glyph { filter: none; }
+
+.subtitle {
+  margin: 0 0 24px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--neon-cyan);
+  letter-spacing: 1px;
+  line-height: 1.8;
+}
+
+/* -------------------------------------------------------------------- */
+/* Flash messages -- styled like an arcade status readout                */
+/* -------------------------------------------------------------------- */
+
+.flash-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.flash {
+  font-family: var(--font-body);
+  font-size: 18px;
+  padding: 10px 14px;
+  border: 2px solid;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.3;
+}
+
+.flash.success { color: var(--neon-green); border-color: var(--neon-green); }
+.flash.error, .flash.danger { color: var(--neon-pink); border-color: var(--neon-pink); }
+.flash.info, .flash.message { color: var(--neon-cyan); border-color: var(--neon-cyan); }
+.flash.warning { color: var(--neon-yellow); border-color: var(--neon-yellow); }
+
+/* -------------------------------------------------------------------- */
+/* Buttons -- same tactile press style as the game start/mute buttons    */
+/* -------------------------------------------------------------------- */
+
+.btn {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 12px 16px;
+  border-radius: 4px;
+  border: 3px solid #000;
+  color: #1a0a12;
+  background: var(--neon-green);
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 4px 0 #2f7a26;
+  transition: transform 0.05s ease, box-shadow 0.05s ease, filter 0.1s ease;
+  text-decoration: none;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.08); text-decoration: none; }
+.btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #2f7a26;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+.btn--secondary {
+  background: var(--neon-pink);
+  box-shadow: 0 4px 0 #8f2560;
+}
+.btn--secondary:active:not(:disabled) { box-shadow: 0 1px 0 #8f2560; }
+
+.btn--cyan {
+  background: var(--neon-cyan);
+  box-shadow: 0 4px 0 #1c8f8f;
+}
+.btn--cyan:active:not(:disabled) { box-shadow: 0 1px 0 #1c8f8f; }
+
+.btn--block { display: block; width: 100%; }
+
+/* -------------------------------------------------------------------- */
+/* Home page -- two big cabinet-select buttons                           */
+/* -------------------------------------------------------------------- */
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.home-actions .btn {
+  padding: 18px 16px;
+  font-size: 11px;
+}
+
+/* -------------------------------------------------------------------- */
+/* Forms -- terminal-style fields inside the cabinet                     */
+/* -------------------------------------------------------------------- */
+
+.arcade-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--neon-cyan);
+  letter-spacing: 0.5px;
+}
+
+.field-group .hint {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select {
+  font-family: var(--font-body);
+  font-size: 20px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+  background: var(--bg-screen);
+  color: var(--text);
+  width: 100%;
+}
+
+input:focus, select:focus {
+  border-color: var(--neon-yellow);
+}
+
+input:invalid:not(:placeholder-shown) {
+  border-color: var(--neon-pink);
+}
+
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--neon-cyan) 50%),
+                     linear-gradient(135deg, var(--neon-cyan) 50%, transparent 50%);
+  background-position: calc(100% - 20px) center, calc(100% - 14px) center;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.form-footer {
+  text-align: center;
+  font-size: 17px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 420px) {
+  body { font-size: 18px; padding: 14px; }
+  .cabinet { padding: 22px 18px 24px; }
+  .marquee { font-size: 15px; }
+}

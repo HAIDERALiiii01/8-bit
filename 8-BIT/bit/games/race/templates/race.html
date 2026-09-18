@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>8-BIT TURTLE RACE</title>
+<!-- Present only if your app uses Flask-WTF's CSRFProtect; harmless empty string otherwise -->
+<meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0716;
+    --bg-panel: #150f2e;
+    --border: #4d3b8c;
+    --neon-pink: #ff4fa3;
+    --neon-cyan: #34e2e2;
+    --neon-yellow: #ffd447;
+    --text: #f2eefc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-deep);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,79,163,0.12), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(52,226,226,0.12), transparent 40%);
+    font-family: "Press Start 2P", monospace;
+    color: var(--text);
+    padding: 20px;
+  }
+
+  .cabinet {
+    background: var(--bg-panel);
+    border: 4px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px 26px;
+    width: 100%;
+    max-width: 760px;
+    box-shadow:
+      0 0 0 4px #0a0716,
+      0 0 0 8px var(--neon-pink),
+      0 18px 40px rgba(0,0,0,0.6);
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    text-align: center;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px rgba(255,212,71,0.7), 2px 2px 0 #6b4a00;
+    letter-spacing: 1px;
+  }
+  p.sub {
+    margin: 0 0 18px;
+    text-align: center;
+    font-size: 9px;
+    color: var(--neon-cyan);
+    letter-spacing: 1px;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  select, button {
+    font-family: "Press Start 2P", monospace;
+    font-size: 10px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 3px solid #000;
+    color: var(--text);
+  }
+  select {
+    background: #0a0716;
+    border-color: var(--neon-cyan);
+    cursor: pointer;
+  }
+  button {
+    background: var(--neon-pink);
+    color: #1a0a12;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #8f2560;
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.08); }
+  button:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #8f2560;
+  }
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .screen-wrap {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 3px solid #000;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    image-rendering: pixelated;
+    background: #0c0820;
+  }
+  /* scanline overlay for CRT feel */
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.18) 0px,
+      rgba(0,0,0,0.18) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+    mix-blend-mode: multiply;
+  }
+
+  .result {
+    margin-top: 16px;
+    min-height: 18px;
+    font-size: 11px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .result.win { color: var(--neon-yellow); text-shadow: 0 0 6px rgba(255,212,71,0.7); }
+  .result.lose { color: var(--neon-pink); text-shadow: 0 0 6px rgba(255,79,163,0.6); }
+
+  .coin-award {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 6px rgba(52,226,226,0.7);
+  }
+
+  .coin-display {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px rgba(255,212,71,0.5);
+  }
+</style>
+</head>
+<body>
+
+<div class="cabinet">
+  <h1>&#128034; TURTLE RACE</h1>
+  <p class="sub">PICK YOUR RACER &mdash; PRESS START</p>
+
+  <div class="controls">
+    <select id="prediction">
+      <option value="yellow">YELLOW</option>
+      <option value="red">RED</option>
+      <option value="purple">PURPLE</option>
+      <option value="blue">BLUE</option>
+      <option value="green">GREEN</option>
+      <option value="black">BLACK</option>
+    </select>
+    <button id="startBtn">START RACE</button>
+    <button id="muteBtn">&#128264; MUSIC OFF</button>
+  </div>
+
+  <div class="screen-wrap">
+    <canvas id="raceCanvas" width="700" height="360"></canvas>
+    <div class="scanlines"></div>
+  </div>
+
+  <div id="result" class="result"></div>
+  <div id="coinDisplay" class="coin-display">COINS: {{ '%04d' % coins }}</div>
+
+  <!-- Background music: drop a file named bgm.mp3 into /static/music/.
+       If it's missing, playback fails silently and the game just runs without sound. -->
+  <audio id="bgm" loop preload="auto">
+    <source src="{{ url_for('bit.race.static', filename='bgm.mp3') }}" type="audio/mpeg">
+  </audio>
+</div>
+
+<script>
+const canvas = document.getElementById('raceCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
+// ---- racer roster (swap this out for other 8-bit critters later) ----
+const RACERS = {
+  yellow: { main: '#f4d548', shade: '#c7a934' },
+  red:    { main: '#e2574c', shade: '#b83f36' },
+  purple: { main: '#9b5fe0', shade: '#7a3fc2' },
+  blue:   { main: '#4aa8e0', shade: '#3480b8' },
+  green:  { main: '#3bbf6d', shade: '#2a9354' },
+  black:  { main: '#3a3a42', shade: '#242429' } // lifted off pure black so it stays visible
+};
+const RACER_ORDER = ['yellow', 'red', 'purple', 'blue', 'green', 'black'];
+
+const OUTLINE = '#f5f0e6'; // fixed bright rim, always contrasts with bg AND shell color
+const EYE     = '#ffffff'; // only the eye + outline stay neutral across all racers
+
+// 16 x 10 pixel-art turtle, facing right. '.' = empty.
+const SPRITE = [
+  "....oooooo......",
+  "...oSSSSSSo.....",
+  "..oSsSSSsSSo....",
+  "..oSSSSSSSSoHH..",
+  ".oSSSSSSSSSSoHE.",
+  "ToSSSSSSSSSSoHH.",
+  "..oSSsSSSsSoo...",
+  "..oSSSSSSSo.....",
+  "...oLo..oLo.....",
+  "....L....L......"
+];
+const PIXEL = 4;
+const SPRITE_W = SPRITE[0].length * PIXEL;
+const SPRITE_H = SPRITE.length * PIXEL;
+
+const laneHeight = HEIGHT / RACER_ORDER.length;
+const startX = SPRITE_W + 20;
+const finishX = WIDTH - 40;
+
+let turtles = [];
+let raceRunning = false;
+
+function initTurtles() {
+  turtles = RACER_ORDER.map((color, i) => ({
+    color,
+    x: startX,
+    y: laneHeight * i + laneHeight / 2
+  }));
+}
+
+function drawTrack() {
+  ctx.fillStyle = '#0c0820';
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // lane dividers
+  ctx.strokeStyle = 'rgba(77,59,140,0.6)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < RACER_ORDER.length; i++) {
+    const y = Math.round(laneHeight * i) + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(WIDTH, y);
+    ctx.stroke();
+  }
+
+  // finish line (checkered)
+  const checkSize = 8;
+  for (let y = 0; y < HEIGHT; y += checkSize) {
+    const even = Math.floor(y / checkSize) % 2 === 0;
+    ctx.fillStyle = even ? '#f5f0e6' : '#0c0820';
+    ctx.fillRect(finishX, y, checkSize, checkSize);
+  }
+
+  // start line
+  ctx.fillStyle = 'rgba(52,226,226,0.5)';
+  ctx.fillRect(startX - 14, 0, 3, HEIGHT);
+}
+
+function drawTurtle(t) {
+  const colors = RACERS[t.color];
+  const originX = Math.round(t.x - SPRITE_W);
+  const originY = Math.round(t.y - SPRITE_H / 2);
+
+  for (let r = 0; r < SPRITE.length; r++) {
+    const row = SPRITE[r];
+    for (let c = 0; c < row.length; c++) {
+      const ch = row[c];
+      if (ch === '.') continue;
+      let color;
+      switch (ch) {
+        case 'o': color = OUTLINE; break;
+        case 'S': color = colors.main; break;
+        case 's': color = colors.shade; break;
+        case 'H': color = colors.shade; break;
+        case 'T': color = colors.shade; break;
+        case 'E': color = EYE; break;
+        case 'L': color = colors.shade; break;
+        default: continue;
+      }
+      ctx.fillStyle = color;
+      ctx.fillRect(originX + c * PIXEL, originY + r * PIXEL, PIXEL, PIXEL);
+    }
+  }
+}
+
+function drawLaneLabels() {
+  ctx.font = '9px "Press Start 2P", monospace';
+  ctx.textBaseline = 'middle';
+  RACER_ORDER.forEach((color, i) => {
+    const y = laneHeight * i + laneHeight / 2;
+    ctx.fillStyle = RACERS[color].main;
+    ctx.fillText(color.toUpperCase(), 6, y);
+  });
+}
+
+function draw() {
+  drawTrack();
+  drawLaneLabels();
+  turtles.forEach(drawTurtle);
+}
+
+function announceResult(winnerColor, won, awarded, coinsTotal) {
+  const resultEl = document.getElementById('result');
+  resultEl.textContent = won
+    ? `YOU WIN! ${winnerColor.toUpperCase()} TAKES IT!`
+    : `YOU LOSE. ${winnerColor.toUpperCase()} TAKES IT!`;
+  resultEl.className = 'result ' + (won ? 'win' : 'lose');
+
+  if (awarded > 0) {
+    const coinLine = document.createElement('span');
+    coinLine.className = 'coin-award';
+    coinLine.textContent = `YOU WON ${awarded} COINS!`;
+    resultEl.appendChild(coinLine);
+  }
+
+  document.getElementById('coinDisplay').textContent =
+    'COINS: ' + String(coinsTotal).padStart(4, '0');
+  document.getElementById('startBtn').disabled = false;
+  raceRunning = false;
+}
+
+function showFailure(message) {
+  document.getElementById('result').textContent = message;
+  document.getElementById('result').className = 'result lose';
+  document.getElementById('startBtn').disabled = false;
+  raceRunning = false;
+}
+
+// The server runs the whole race and decides the winner -- this just asks
+// for a result and plays back the frames it's given. Nothing here decides
+// who wins or how many coins are awarded; that's all server-side now.
+async function runRace(prediction) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  let res;
+  try {
+    res = await fetch('{{ url_for("bit.race.run_race") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken // ignored if your app doesn't check it
+      },
+      body: JSON.stringify({ prediction })
+    });
+  } catch (err) {
+    showFailure(`NETWORK ERROR: ${err.message}`);
+    return;
+  }
+
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body && body.error) detail = body.error;
+    } catch {
+      // response wasn't JSON (e.g. an HTML error page) -- keep the status code
+    }
+    showFailure(`RACE FAILED: ${detail}`);
+    console.error('Race request failed:', res.status, detail);
+    return;
+  }
+
+  const data = await res.json();
+  initTurtles();
+  draw();
+
+  const playback = (i) => {
+    if (i >= data.frames.length) {
+      announceResult(data.winner, data.won, data.awarded, data.coins);
+      return;
+    }
+    const frame = data.frames[i];
+    const trackLength = finishX - startX;
+    turtles.forEach(t => {
+      const progress = Math.min(frame[t.color], data.finish);
+      t.x = startX + (progress / data.finish) * trackLength;
+    });
+    draw();
+    setTimeout(() => playback(i + 1), 25);
+  };
+  playback(0);
+}
+
+// ---- background music: swap /static/music/bgm.mp3, everything else just works ----
+const bgm = document.getElementById('bgm');
+const muteBtn = document.getElementById('muteBtn');
+let musicWanted = true;
+
+function tryPlayMusic() {
+  if (!musicWanted) return;
+  const playPromise = bgm.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      // no track present, or browser blocked it -- just stay silent
+    });
+  }
+}
+
+muteBtn.addEventListener('click', () => {
+  musicWanted = !musicWanted;
+  if (musicWanted) {
+    muteBtn.textContent = '\u{1F50A} MUSIC ON';
+    tryPlayMusic();
+  } else {
+    muteBtn.textContent = '\u{1F508} MUSIC OFF';
+    bgm.pause();
+  }
+});
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  if (raceRunning) return;
+  document.getElementById('result').textContent = '';
+  document.getElementById('result').className = 'result';
+  document.getElementById('startBtn').disabled = true;
+  raceRunning = true;
+  tryPlayMusic(); // this click is a user gesture, so it's safe to start audio here
+  const prediction = document.getElementById('prediction').value;
+  runRace(prediction);
+});
+
+initTurtles();
+draw();
+</script>
+
+</body>
+</html>

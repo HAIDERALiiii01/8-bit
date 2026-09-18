@@ -1,17 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Home Page{% endblock %}
-
+{% block title %}Home{% endblock %}
 
 {% block content %}
+<div class="cabinet">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
-    <a href="{{ url_for('login') }}">Login</a>
-    <a href="{{ url_for('register') }}">Register</a>
+
+    <h1 class="marquee">&#127918; 8-BIT STUDIOS</h1>
+    <p class="subtitle">INSERT COIN TO CONTINUE</p>
+
+    <div class="home-actions">
+        <a class="btn btn--block" href="{{ url_for('login') }}">PLAYER LOGIN</a>
+        <a class="btn btn--secondary btn--block" href="{{ url_for('register') }}">NEW PLAYER? REGISTER</a>
+    </div>
+</div>
 {% endblock %}
