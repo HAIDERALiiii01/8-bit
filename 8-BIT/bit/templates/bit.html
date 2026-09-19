@@ -8,19 +8,25 @@
 
     <div class="arcade-row">
         <a href="{{ url_for('bit.games') }}" class="cabinet-card">
-            <div class="cabinet-card__screen"><span>&#127918;</span></div>
+            <div class="cabinet-card__screen">
+                <img src="{{ url_for('bit.static', filename='images/classic.jfif') }}" alt="Play Games">
+            </div>
             <span class="cabinet-card__label">PLAY GAMES</span>
         </a>
 
         <a href="{{ url_for('bit.vending_machine') }}" class="cabinet-card">
-            <div class="cabinet-card__screen"><span>&#129380;</span></div>
+            <div class="cabinet-card__screen">
+                <img src="{{ url_for('bit.static', filename='images/vend.jfif') }}" alt="Vending Machine">
+            </div>
             <span class="cabinet-card__label">VENDING MACHINE</span>
         </a>
 
         {% if session.get('is_admin') %}
             <a href="{{ url_for('bit.dashboard') }}" class="cabinet-card cabinet-card--admin">
-                <div class="cabinet-card__screen"><span>&#128295;</span></div>
-                <span class="cabinet-card__label">DASHBOARD</span>
+                <div class="cabinet-card__screen">
+                    <img src="{{ url_for('bit.static', filename='images/admin.jfif') }}" alt="Dashboard">
+                </div>
+                <span class="cabinet-card__label">ADMIN DASHBOARD</span>
             </a>
         {% endif %}
     </div>

@@ -8,12 +8,16 @@
 
     <div class="arcade-row">
         <a href="{{ url_for('bit.race.race') }}" class="cabinet-card">
-            <div class="cabinet-card__screen"><span>&#128034;</span></div>
+            <div class="cabinet-card__screen">
+                <img src="{{ url_for('bit.static', filename='images/race.jfif') }}" alt="Turtle Race">
+            </div>
             <span class="cabinet-card__label">TURTLE RACE</span>
         </a>
 
         <a href="{{ url_for('bit.snake.snake') }}" class="cabinet-card">
-            <div class="cabinet-card__screen"><span>&#128013;</span></div>
+            <div class="cabinet-card__screen">
+                <img src="{{ url_for('bit.static', filename='images/snake.jfif') }}" alt="Snake">
+            </div>
             <span class="cabinet-card__label">SNAKE</span>
         </a>
     </div>
