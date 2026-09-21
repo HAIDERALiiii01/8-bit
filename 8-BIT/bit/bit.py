@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, session
 from auth import login_required, admin_required
 from bit.games.race.race import race_bp
 from bit.games.snake.snake import snake_bp
-
+from bit.games.game import PLAYS_PER_GAME_PER_DAY, get_coins, plays_left
 
 bit_bp = Blueprint(
     "bit", __name__,
@@ -29,7 +29,11 @@ def vending_machine():
 @bit_bp.route("/8-bit/games")
 @login_required
 def games():
-    return render_template("games.html")
+    uid = session["user_id"]
+    return render_template("games.html", coins=get_coins(uid),
+                           race_lives=plays_left(uid, "Turtle Race"),
+                           snake_lives=plays_left(uid, "Snake"),
+                           max_lives=PLAYS_PER_GAME_PER_DAY)
 
 
 @bit_bp.route("/8-bit/dashboard")

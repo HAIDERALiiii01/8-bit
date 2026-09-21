@@ -1,45 +1,37 @@
-from flask import Flask, render_template, request, flash, redirect, url_for, session
-from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import CSRFProtect
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from dotenv import load_dotenv
 import os
 import re
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
+
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, flash, redirect, url_for, session
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_wtf import CSRFProtect
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
+
 from auth import login_required, redirect_if_logged_in
 from bit.bit import bit_bp
+from extensions import db
+from models import User, Game, GameSessions  # importing registers the tables
+
 
 load_dotenv()
 
-password = os.getenv("PASSWORD")
+db_password = os.getenv("PASSWORD")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://postgres:{password}@localhost/vending_machine"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://postgres:{db_password}@localhost/vending_machine"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 
-db = SQLAlchemy(app)
+db.init_app(app)
 csrf = CSRFProtect(app)
 limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
 app.register_blueprint(bit_bp)
-
-
-class User(db.Model):
-    __tablename__ = "users"
-
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    age = db.Column(db.Integer, nullable=False)
-    gender = db.Column(db.String(10), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False, nullable=False)
 
 
 @app.route("/home")
@@ -48,7 +40,6 @@ def home():
     if "user_id" in session:
         return redirect(url_for("bit.bit"))
     return render_template("home.html")
-        
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -157,8 +148,22 @@ def register():
     return render_template("register.html", form={})
 
 
+def seed_games():
+    games = [
+        # (name, description, coin_reward)
+        ("Snake", "Classic snake game", 50),                              # coins per 500 points
+        ("Turtle Race", "Race your turtle to the finish line", 50),       # coins for a win
+    ]
+    for name, desc, reward in games:
+        if not Game.query.filter_by(game_name=name).first():
+            db.session.add(Game(game_name=name, description=desc, coin_reward=reward))
+    db.session.commit()
+
+
 with app.app_context():
     db.create_all()
+    seed_games()
+
 
 if __name__ == "__main__":
     app.run(debug=True)

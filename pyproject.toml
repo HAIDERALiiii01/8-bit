@@ -12,4 +12,5 @@ dependencies = [
     "psycopg2-binary>=2.9.13",
     "pygame>=2.6.1",
     "python-dotenv>=1.2.3",
+    "tzdata>=2026.4",
 ]

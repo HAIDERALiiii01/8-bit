@@ -62,6 +62,22 @@
     letter-spacing: 1px;
   }
 
+  /* ---- HUD: coins on the left, lives on the right ---- */
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: #0a0716;
+    border: 3px solid #000;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  .hud .coins { color: var(--neon-yellow); text-shadow: 0 0 6px rgba(255,212,71,0.5); }
+  .hud .label { color: var(--neon-cyan); }
+  .hud .lives { letter-spacing: 2px; }
+
   .controls {
     display: flex;
     flex-wrap: wrap;
@@ -83,6 +99,10 @@
     background: #0a0716;
     border-color: var(--neon-cyan);
     cursor: pointer;
+  }
+  select:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
   button {
     background: var(--neon-pink);
@@ -148,13 +168,13 @@
     text-shadow: 0 0 6px rgba(52,226,226,0.7);
   }
 
-  .coin-display {
+  .hint {
     margin-top: 14px;
     text-align: center;
-    font-size: 12px;
-    color: var(--neon-yellow);
-    text-shadow: 0 0 6px rgba(255,212,71,0.5);
+    font-size: 8px;
+    color: #8a7fbf;
   }
+  .hint.empty { color: var(--neon-pink); }
 </style>
 </head>
 <body>
@@ -162,6 +182,11 @@
 <div class="cabinet">
   <h1>&#128034; TURTLE RACE</h1>
   <p class="sub">PICK YOUR RACER &mdash; PRESS START</p>
+
+  <div class="hud">
+    <span class="coins" id="coinDisplay">COINS: {{ '%04d' % coins }}</span>
+    <span><span class="label">LIVES </span><span class="lives" id="lives"></span></span>
+  </div>
 
   <div class="controls">
     <select id="prediction">
@@ -182,7 +207,7 @@
   </div>
 
   <div id="result" class="result"></div>
-  <div id="coinDisplay" class="coin-display">COINS: {{ '%04d' % coins }}</div>
+  <div id="hint" class="hint"></div>
 
   <!-- Background music: drop a file named bgm.mp3 into /static/music/.
        If it's missing, playback fails silently and the game just runs without sound. -->
@@ -235,6 +260,27 @@ const finishX = WIDTH - 40;
 
 let turtles = [];
 let raceRunning = false;
+
+// ---- lives (daily plays for this game). The server is the real gatekeeper;
+// this is just the display + keeping the Start button honest. ----
+const MAX_LIVES = {{ max_lives }};
+let livesLeft = {{ plays_left }};
+
+function renderLives() {
+  document.getElementById('lives').textContent =
+    '\u2764\uFE0F'.repeat(livesLeft) + '\u{1F5A4}'.repeat(MAX_LIVES - livesLeft);
+  const hint = document.getElementById('hint');
+  hint.textContent = livesLeft <= 0
+    ? 'NO LIVES LEFT -- COME BACK AFTER MIDNIGHT (PKT)'
+    : 'LIVES RESET AT MIDNIGHT (PKT)';
+  hint.classList.toggle('empty', livesLeft <= 0);
+}
+
+// Single place that decides whether the player may start a race.
+function refreshStart() {
+  document.getElementById('startBtn').disabled = raceRunning || livesLeft <= 0;
+  document.getElementById('prediction').disabled = livesLeft <= 0;
+}
 
 function initTurtles() {
   turtles = RACER_ORDER.map((color, i) => ({
@@ -315,7 +361,7 @@ function draw() {
   turtles.forEach(drawTurtle);
 }
 
-function announceResult(winnerColor, won, awarded, coinsTotal) {
+function announceResult(winnerColor, won, awarded, coinsTotal, playsLeft) {
   const resultEl = document.getElementById('result');
   resultEl.textContent = won
     ? `YOU WIN! ${winnerColor.toUpperCase()} TAKES IT!`
@@ -331,15 +377,18 @@ function announceResult(winnerColor, won, awarded, coinsTotal) {
 
   document.getElementById('coinDisplay').textContent =
     'COINS: ' + String(coinsTotal).padStart(4, '0');
-  document.getElementById('startBtn').disabled = false;
+
+  livesLeft = playsLeft;
+  renderLives();
   raceRunning = false;
+  refreshStart(); // stays disabled if that was the last life
 }
 
 function showFailure(message) {
   document.getElementById('result').textContent = message;
   document.getElementById('result').className = 'result lose';
-  document.getElementById('startBtn').disabled = false;
   raceRunning = false;
+  refreshStart();
 }
 
 // The server runs the whole race and decides the winner -- this just asks
@@ -370,6 +419,11 @@ async function runRace(prediction) {
     } catch {
       // response wasn't JSON (e.g. an HTML error page) -- keep the status code
     }
+    // 403 = the server says there are no plays left (stale tab, or midnight passed)
+    if (res.status === 403) {
+      livesLeft = 0;
+      renderLives();
+    }
     showFailure(`RACE FAILED: ${detail}`);
     console.error('Race request failed:', res.status, detail);
     return;
@@ -381,7 +435,7 @@ async function runRace(prediction) {
 
   const playback = (i) => {
     if (i >= data.frames.length) {
-      announceResult(data.winner, data.won, data.awarded, data.coins);
+      announceResult(data.winner, data.won, data.awarded, data.coins, data.plays_left);
       return;
     }
     const frame = data.frames[i];
@@ -423,11 +477,11 @@ muteBtn.addEventListener('click', () => {
 });
 
 document.getElementById('startBtn').addEventListener('click', () => {
-  if (raceRunning) return;
+  if (raceRunning || livesLeft <= 0) return;
   document.getElementById('result').textContent = '';
   document.getElementById('result').className = 'result';
-  document.getElementById('startBtn').disabled = true;
   raceRunning = true;
+  refreshStart();
   tryPlayMusic(); // this click is a user gesture, so it's safe to start audio here
   const prediction = document.getElementById('prediction').value;
   runRace(prediction);
@@ -435,6 +489,8 @@ document.getElementById('startBtn').addEventListener('click', () => {
 
 initTurtles();
 draw();
+renderLives();
+refreshStart();
 </script>
 
 </body>

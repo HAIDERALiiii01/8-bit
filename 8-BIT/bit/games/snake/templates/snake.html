@@ -63,6 +63,22 @@
     letter-spacing: 1px;
   }
 
+  /* ---- HUD: coins on the left, lives on the right ---- */
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: #0a0716;
+    border: 3px solid #000;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  .hud .coins { color: var(--neon-yellow); text-shadow: 0 0 6px rgba(255,212,71,0.5); }
+  .hud .label { color: var(--neon-cyan); }
+  .hud .lives { letter-spacing: 2px; }
+
   .stat-row {
     display: flex;
     justify-content: space-between;
@@ -170,13 +186,13 @@
     text-shadow: 0 0 6px rgba(52,226,226,0.7);
   }
 
-  .coin-display {
+  .hint {
     margin-top: 14px;
     text-align: center;
-    font-size: 12px;
-    color: var(--neon-yellow);
-    text-shadow: 0 0 6px rgba(255,212,71,0.5);
+    font-size: 8px;
+    color: #8a7fbf;
   }
+  .hint.empty { color: var(--neon-pink); }
 
   @media (max-width: 420px) {
     .stat-row { font-size: 8px; }
@@ -187,7 +203,12 @@
 
 <div class="cabinet">
   <h1>&#128013; 8-BIT SNAKE</h1>
-  <p class="sub">ARROW KEYS TO MOVE &mdash; EAT TO GROW</p>
+  <p class="sub">ARROW KEYS TO MOVE &mdash; {{ score_step }} PTS = {{ coin_reward }} COINS</p>
+
+  <div class="hud">
+    <span class="coins" id="coinDisplay">COINS: {{ '%04d' % coins }}</span>
+    <span><span class="label">LIVES </span><span class="lives" id="lives"></span></span>
+  </div>
 
   <div class="stat-row">
     <span><span class="label">SCORE </span><span class="value" id="scoreVal">0</span></span>
@@ -209,7 +230,7 @@
   </div>
 
   <div id="result" class="result"></div>
-  <div id="coinDisplay" class="coin-display">COINS: {{ '%04d' % coins }}</div>
+  <div id="hint" class="hint"></div>
 
   <!-- Background music: drop a file named bgm.mp3 into the snake blueprint's static folder. -->
   <audio id="bgm" loop preload="auto">
@@ -230,6 +251,11 @@ const GRID_COUNT = 28;               // must match GRID_COUNT in snake.py
 const CELL = canvas.width / GRID_COUNT;
 const TICK_MS = 100;                 // same pace as the original turtle version
 
+// These come from the server so the page can never disagree with snake.py / the DB.
+const POINTS_PER_FOOD = {{ points_per_food }};
+const SCORE_STEP = {{ score_step }};
+const MAX_LIVES = {{ max_lives }};
+
 const COLOR_BODY = '#7cff6b';
 const COLOR_HEAD = '#c9ffb8';
 const COLOR_FOOD = '#34e2e2';
@@ -237,6 +263,26 @@ const COLOR_BG = '#0c0820';
 const COLOR_GRID = 'rgba(77,59,140,0.18)';
 
 let snake, direction, nextDirection, food, score, gameLoopId, running;
+
+// ---- lives (daily plays for this game). The server is the real gatekeeper;
+// this is just the display + keeping the Start button honest. ----
+let livesLeft = {{ plays_left }};
+let busy = false;   // true from Start until the server has saved the run
+
+function renderLives() {
+  document.getElementById('lives').textContent =
+    '\u2764\uFE0F'.repeat(livesLeft) + '\u{1F5A4}'.repeat(MAX_LIVES - livesLeft);
+  const hint = document.getElementById('hint');
+  hint.textContent = livesLeft <= 0
+    ? 'NO LIVES LEFT -- COME BACK AFTER MIDNIGHT (PKT)'
+    : 'LIVES RESET AT MIDNIGHT (PKT)';
+  hint.classList.toggle('empty', livesLeft <= 0);
+}
+
+// Single place that decides whether the player may start a run.
+function refreshStart() {
+  document.getElementById('startBtn').disabled = busy || livesLeft <= 0;
+}
 
 function resetState() {
   const mid = Math.floor(GRID_COUNT / 2);
@@ -295,7 +341,7 @@ function tick() {
 
   snake.unshift(head);
   if (head.x === food.x && head.y === food.y) {
-    score += 1;
+    score += POINTS_PER_FOOD;
     document.getElementById('scoreVal').textContent = score;
     placeFood();
   } else {
@@ -305,10 +351,12 @@ function tick() {
 }
 
 function startGame() {
+  if (busy || livesLeft <= 0) return;
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('result').textContent = '';
   document.getElementById('result').className = 'result';
-  document.getElementById('startBtn').disabled = true;
+  busy = true;
+  refreshStart();
   resetState();
   draw();
   running = true;
@@ -340,7 +388,8 @@ async function reportScore(finalScore) {
     });
   } catch (err) {
     resultEl.textContent = `NETWORK ERROR: ${err.message}`;
-    document.getElementById('startBtn').disabled = false;
+    busy = false;
+    refreshStart();
     return;
   }
 
@@ -352,9 +401,15 @@ async function reportScore(finalScore) {
     } catch {
       // response wasn't JSON -- keep the status code
     }
+    // 403 = the server says there are no plays left (stale tab, or midnight passed)
+    if (res.status === 403) {
+      livesLeft = 0;
+      renderLives();
+    }
     resultEl.textContent = `COULD NOT SAVE RUN: ${detail}`;
     console.error('finish_run failed:', res.status, detail);
-    document.getElementById('startBtn').disabled = false;
+    busy = false;
+    refreshStart();
     return;
   }
 
@@ -367,12 +422,16 @@ async function reportScore(finalScore) {
     coinLine.textContent = `YOU WON ${data.awarded} COINS!`;
     resultEl.appendChild(coinLine);
   } else {
-    resultEl.textContent = 'NO FOOD EATEN -- NO COINS THIS RUN';
+    resultEl.textContent = `REACH ${SCORE_STEP} PTS TO EARN COINS`;
   }
 
   document.getElementById('highVal').textContent = String(data.high_score).padStart(4, '0');
   document.getElementById('coinDisplay').textContent = 'COINS: ' + String(data.coins).padStart(4, '0');
-  document.getElementById('startBtn').disabled = false;
+
+  livesLeft = data.plays_left;
+  renderLives();
+  busy = false;
+  refreshStart(); // stays disabled if that was the last life
 }
 
 const DIRECTION_KEYS = {
@@ -440,6 +499,8 @@ document.getElementById('startBtn').addEventListener('click', startGame);
 
 resetState();
 draw();
+renderLives();
+refreshStart();
 </script>
 
 </body>
