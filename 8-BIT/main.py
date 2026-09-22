@@ -1,7 +1,6 @@
 import os
 import re
 from datetime import timedelta
-
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, url_for, session
 from flask_limiter import Limiter
@@ -9,11 +8,11 @@ from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from auth import login_required, redirect_if_logged_in
 from bit.bit import bit_bp
+from bit.games.game import get_coins
 from extensions import db
-from models import User, Game, GameSessions  # importing registers the tables
+from models import User, Game, GameSessions, Products  # importing registers the tables
 
 
 load_dotenv()
@@ -160,9 +159,55 @@ def seed_games():
     db.session.commit()
 
 
+def seed_products():
+    products = [
+        # (name, category, price, description)
+        ("Chai", "Hot Drinks", 30,
+        "A warm, comforting cup of traditional Pakistani tea, perfect for a quick refresh."),
+
+        ("Coffee", "Hot Drinks", 50,
+        "A hot, energizing coffee for a quick boost during your break or gaming session."),
+
+        ("Pakola", "Drinks", 40,
+        "A chilled, fizzy Pakistani classic with its signature sweet and refreshing taste."),
+
+        ("Coke", "Drinks", 50,
+        "A cold and refreshing cola to pair perfectly with your favorite snack."),
+
+        ("Lays", "Snacks", 40,
+        "Crispy and crunchy potato chips, perfect for a quick snack while you play."),
+
+        ("Snickers", "Snacks", 50,
+        "A chocolate bar packed with caramel, peanuts, nougat, and chocolate for a sweet energy boost."),
+
+        ("Extra Bit", "Game", 60,
+        "Get an extra Bit to keep playing your favorite games when you run out."),
+
+        ("Egg Sandwich", "Food", 100,
+        "A filling sandwich with a tasty egg filling, perfect for a quick and satisfying bite."),
+    ]
+    for name, category, price, description in products:
+        if not Products.query.filter_by(product_name=name).first():
+            db.session.add(Products(
+                product_name=name,
+                category=category,
+                price=price,
+                stock_quantity=50,
+                description=description,
+                status="active",
+            ))
+    db.session.commit()
+
+
+@app.context_processor
+def inject_total_coins():
+    uid = session.get("user_id")
+    return {"total_coins": get_coins(uid) if uid else None}
+
 with app.app_context():
     db.create_all()
     seed_games()
+    seed_products()
 
 
 if __name__ == "__main__":

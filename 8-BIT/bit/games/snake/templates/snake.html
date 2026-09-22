@@ -207,7 +207,7 @@
 
   <div class="hud">
     <span class="coins" id="coinDisplay">COINS: {{ '%04d' % coins }}</span>
-    <span><span class="label">LIVES </span><span class="lives" id="lives"></span></span>
+    <span><span class="label">BITS </span><span class="lives" id="lives"></span></span>
   </div>
 
   <div class="stat-row">
@@ -247,7 +247,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-const GRID_COUNT = 28;               // must match GRID_COUNT in snake.py
+const GRID_COUNT = 25;               // must match GRID_COUNT in snake.py
 const CELL = canvas.width / GRID_COUNT;
 const TICK_MS = 100;                 // same pace as the original turtle version
 
@@ -274,8 +274,8 @@ function renderLives() {
     '\u2764\uFE0F'.repeat(livesLeft) + '\u{1F5A4}'.repeat(MAX_LIVES - livesLeft);
   const hint = document.getElementById('hint');
   hint.textContent = livesLeft <= 0
-    ? 'NO LIVES LEFT -- COME BACK AFTER MIDNIGHT (PKT)'
-    : 'LIVES RESET AT MIDNIGHT (PKT)';
+    ? 'NO BITS LEFT -- COME BACK AFTER MIDNIGHT (PKT)'
+    : 'BITS RESET AT MIDNIGHT (PKT)';
   hint.classList.toggle('empty', livesLeft <= 0);
 }
 

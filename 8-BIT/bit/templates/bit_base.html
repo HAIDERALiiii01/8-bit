@@ -43,13 +43,30 @@
                 {% endif %}
             </nav>
 
-            {% if session.username %}
-            <div class="topbar-user">
-                <span class="topbar-user__tag blink">P1</span>
-                <span class="topbar-user__name">{{ session.username }}</span>
-                <a href="{{ url_for('logout') }}" class="btn btn--secondary btn--small">LOGOUT</a>
+            {# Coins + player chip live in ONE group so the topbar always has 3 flex children #}
+            <div class="topbar-right">
+                {% if total_coins is defined and total_coins is not none %}
+                <div class="coin-bar" title="Your coins" aria-label="Coins: {{ total_coins }}">
+                    <svg class="coin-bar__icon" viewBox="0 0 8 8" width="20" height="20" shape-rendering="crispEdges" aria-hidden="true">
+                        <rect x="2" y="0" width="4" height="1" fill="#ffd447"/>
+                        <rect x="1" y="1" width="6" height="6" fill="#ffd447"/>
+                        <rect x="2" y="7" width="4" height="1" fill="#ffd447"/>
+                        <rect x="3" y="2" width="2" height="4" fill="#b8860b"/>
+                        <rect x="2" y="1" width="1" height="1" fill="#fff3b0"/>
+                    </svg>
+                    <span class="coin-bar__label">COINS</span>
+                    <span class="coin-bar__value">{{ '%04d' % total_coins }}</span>
+                </div>
+                {% endif %}
+
+                {% if session.username %}
+                <div class="topbar-user">
+                    <span class="topbar-user__tag blink">P1</span>
+                    <span class="topbar-user__name">{{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn--secondary btn--small">LOGOUT</a>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
         </header>
 
         <main class="page-wrap">

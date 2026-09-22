@@ -2,21 +2,248 @@
 {% block title %}Vending Machine{% endblock %}
 
 {% block content %}
-<section class="lobby lobby--narrow">
+<section class="lobby lobby--narrow vend-page">
     <h1 class="marquee">VENDING MACHINE</h1>
     <p class="subtitle">SPEND YOUR COINS</p>
 
-    <div class="vending-shell">
-        <div class="vending-shell__window">
-            <span>&#129380;</span>
-            <span>&#127871;</span>
-            <span>&#127918;</span>
+    <div class="vend-machine">
+        <div class="vend-machine__glass">
+            <div class="vend-grid" id="vendGrid">
+                {% for product in products %}
+                <button type="button"
+                        class="vend-slot{% if product.stock_quantity <= 0 %} is-empty{% endif %}"
+                        data-id="{{ product.product_id }}"
+                        data-name="{{ product.product_name }}"
+                        data-price="{{ product.price }}"
+                        data-stock="{{ product.stock_quantity }}"
+                        data-desc="{{ product.description }}"
+                        {% if product.stock_quantity <= 0 %}disabled{% endif %}>
+                    <span class="vend-slot__code">{{ "%02d"|format(loop.index) }}</span>
+                    <span class="vend-slot__window">
+                        <img class="vend-slot__img"
+                             src="{{ url_for('bit.static', filename='images/vend/' ~ (product.product_name|lower|replace(' ', '-')) ~ '.png') }}"
+                             alt=""
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span class="vend-slot__emoji" style="display:none;">🧃</span>
+                    </span>
+                    <span class="vend-slot__name">{{ product.product_name }}</span>
+                    <span class="vend-slot__price">{{ product.price }}&cent;</span>
+                    {% if product.stock_quantity <= 0 %}
+                        <span class="vend-slot__tag vend-slot__tag--empty">SOLD OUT</span>
+                    {% else %}
+                        <span class="vend-slot__tag">x{{ product.stock_quantity }}</span>
+                    {% endif %}
+                </button>
+                {% else %}
+                <p class="coming-soon">NO ITEMS STOCKED YET</p>
+                {% endfor %}
+            </div>
         </div>
-        <div class="vending-shell__slot"></div>
+        <div class="vend-machine__base">
+            <span class="vend-machine__tray-slot"></span>
+        </div>
     </div>
 
-    <p class="coming-soon blink">STOCKING SHELVES -- COME BACK SOON</p>
+    <div class="cart-tray" id="cartTray">
+        <h3 class="cart-tray__title">YOUR TRAY</h3>
+        <ul class="cart-tray__list" id="cartList">
+            <li class="cart-tray__empty" id="cartEmpty">-- NOTHING SELECTED --</li>
+        </ul>
+        <div class="cart-tray__total">
+            TOTAL <span id="cartTotal">0</span>&cent; &middot;
+            BALANCE <span id="coinDisplay">{{ total_coins }}</span>&cent;
+        </div>
+        <button type="button" class="btn btn--secondary btn--block" id="checkoutBtn" disabled>
+            INSERT COINS &amp; BUY
+        </button>
+        <p class="cart-tray__msg" id="cartMsg"></p>
+    </div>
 
     <a class="back-link" href="{{ url_for('bit.bit') }}">&larr; Back to lobby</a>
 </section>
+
+<!-- item modal -->
+<div class="vend-modal" id="vendModal" hidden>
+    <div class="vend-modal__backdrop" id="vendModalBackdrop"></div>
+    <div class="vend-modal__card" role="dialog" aria-modal="true">
+        <button type="button" class="vend-modal__close" id="vendModalClose" aria-label="Close">&times;</button>
+        <span class="vend-modal__window" id="vmIcon">🧃</span>
+        <h2 class="vend-modal__title" id="vmName"></h2>
+        <p class="vend-modal__desc" id="vmDesc"></p>
+        <p class="vend-modal__price"><span id="vmPrice"></span>&cent; EACH</p>
+        <div class="vend-qty">
+            <button type="button" class="btn btn--cyan btn--small" id="vmMinus">-</button>
+            <span class="vend-qty__value" id="vmQty">1</span>
+            <button type="button" class="btn btn--cyan btn--small" id="vmPlus">+</button>
+        </div>
+        <button type="button" class="btn btn--block" id="vmAdd">ADD TO TRAY</button>
+    </div>
+</div>
+
+<div class="dispense-fx" id="dispenseFx" hidden>
+    <span class="dispense-fx__item">🎁</span>
+    <span class="dispense-fx__text">DISPENSING&hellip;</span>
+</div>
+
+<script>
+(function () {
+    const grid = document.getElementById('vendGrid');
+    const modal = document.getElementById('vendModal');
+    const modalBackdrop = document.getElementById('vendModalBackdrop');
+    const modalClose = document.getElementById('vendModalClose');
+    const vmIcon = document.getElementById('vmIcon');
+    const vmName = document.getElementById('vmName');
+    const vmDesc = document.getElementById('vmDesc');
+    const vmPrice = document.getElementById('vmPrice');
+    const vmQty = document.getElementById('vmQty');
+    const vmMinus = document.getElementById('vmMinus');
+    const vmPlus = document.getElementById('vmPlus');
+    const vmAdd = document.getElementById('vmAdd');
+
+    const cartList = document.getElementById('cartList');
+    const cartEmpty = document.getElementById('cartEmpty');
+    const cartTotal = document.getElementById('cartTotal');
+    const cartMsg = document.getElementById('cartMsg');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const coinDisplay = document.getElementById('coinDisplay');
+    const dispenseFx = document.getElementById('dispenseFx');
+
+    let cart = {};        // id -> { name, price, qty, stock }
+    let activeSlot = null;
+    let activeQty = 1;
+
+    function openModal(slot) {
+        activeSlot = slot;
+        activeQty = 1;
+        vmIcon.textContent = slot.querySelector('.vend-slot__emoji').textContent || '🧃';
+        vmName.textContent = slot.dataset.name;
+        vmDesc.textContent = slot.dataset.desc || 'No description yet.';
+        vmPrice.textContent = slot.dataset.price;
+        vmQty.textContent = activeQty;
+        modal.hidden = false;
+        requestAnimationFrame(() => modal.classList.add('is-open'));
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        setTimeout(() => { modal.hidden = true; }, 150);
+    }
+
+    function stockRemaining(slot) {
+        const id = slot.dataset.id;
+        const already = cart[id] ? cart[id].qty : 0;
+        return parseInt(slot.dataset.stock, 10) - already;
+    }
+
+    grid.addEventListener('click', (e) => {
+        const slot = e.target.closest('.vend-slot');
+        if (!slot || slot.disabled) return;
+        if (stockRemaining(slot) <= 0) {
+            cartMsg.textContent = "That's all we've got of " + slot.dataset.name + ".";
+            return;
+        }
+        openModal(slot);
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+
+    vmMinus.addEventListener('click', () => {
+        activeQty = Math.max(1, activeQty - 1);
+        vmQty.textContent = activeQty;
+    });
+
+    vmPlus.addEventListener('click', () => {
+        const max = stockRemaining(activeSlot);
+        activeQty = Math.min(max, activeQty + 1);
+        vmQty.textContent = activeQty;
+    });
+
+    vmAdd.addEventListener('click', () => {
+        const id = activeSlot.dataset.id;
+        const price = parseInt(activeSlot.dataset.price, 10);
+        const existing = cart[id];
+        cart[id] = {
+            name: activeSlot.dataset.name,
+            price,
+            qty: (existing ? existing.qty : 0) + activeQty,
+        };
+        renderCart();
+        closeModal();
+    });
+
+    function renderCart() {
+        cartList.querySelectorAll('.cart-tray__row').forEach(el => el.remove());
+        const ids = Object.keys(cart);
+        cartEmpty.style.display = ids.length ? 'none' : 'block';
+
+        let total = 0;
+        ids.forEach((id) => {
+            const item = cart[id];
+            total += item.price * item.qty;
+            const li = document.createElement('li');
+            li.className = 'cart-tray__row';
+            li.innerHTML =
+                '<span>' + item.name + ' &times;' + item.qty + '</span>' +
+                '<span>' + (item.price * item.qty) + '&cent;</span>' +
+                '<button type="button" class="cart-tray__remove" data-id="' + id + '" aria-label="Remove">&times;</button>';
+            cartList.appendChild(li);
+        });
+
+        cartTotal.textContent = total;
+        checkoutBtn.disabled = ids.length === 0;
+        cartMsg.textContent = '';
+    }
+
+    cartList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.cart-tray__remove');
+        if (!btn) return;
+        delete cart[btn.dataset.id];
+        renderCart();
+    });
+
+    checkoutBtn.addEventListener('click', async () => {
+        const payload = {};
+        Object.entries(cart).forEach(([id, item]) => { payload[id] = item.qty; });
+
+        checkoutBtn.disabled = true;
+        cartMsg.textContent = '';
+
+        try {
+            const res = await fetch("{{ url_for('bit.checkout') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart: payload }),
+            });
+            const result = await res.json();
+
+            if (!result.ok) {
+                cartMsg.textContent = result.error || 'Purchase failed.';
+                checkoutBtn.disabled = false;
+                return;
+            }
+
+            coinDisplay.textContent = result.new_balance;
+            const topbarCoins = document.querySelector('.coin-bar__value');
+            if (topbarCoins) topbarCoins.textContent = ('0000' + result.new_balance).slice(-4);
+
+            playDispenseAnimation();
+            cart = {};
+            renderCart();
+        } catch (err) {
+            cartMsg.textContent = 'Something jammed. Try again.';
+            checkoutBtn.disabled = false;
+        }
+    });
+
+    function playDispenseAnimation() {
+        dispenseFx.hidden = false;
+        dispenseFx.classList.add('is-dropping');
+        setTimeout(() => {
+            dispenseFx.classList.remove('is-dropping');
+            dispenseFx.hidden = true;
+        }, 900);
+    }
+})();
+</script>
 {% endblock %}

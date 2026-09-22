@@ -1,8 +1,6 @@
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-
 from sqlalchemy import func
-
 from extensions import db
 from models import Game, GameSessions, CoinTransactions # adjust the name to your model
 

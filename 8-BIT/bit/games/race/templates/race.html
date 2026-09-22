@@ -181,11 +181,11 @@
 
 <div class="cabinet">
   <h1>&#128034; TURTLE RACE</h1>
-  <p class="sub">PICK YOUR RACER &mdash; PRESS START</p>
+  <p class="sub">PICK YOUR RACER &mdash; PRESS START - WIN = 50 COINS</p>
 
   <div class="hud">
     <span class="coins" id="coinDisplay">COINS: {{ '%04d' % coins }}</span>
-    <span><span class="label">LIVES </span><span class="lives" id="lives"></span></span>
+    <span><span class="label">BITS </span><span class="lives" id="lives"></span></span>
   </div>
 
   <div class="controls">
@@ -271,8 +271,8 @@ function renderLives() {
     '\u2764\uFE0F'.repeat(livesLeft) + '\u{1F5A4}'.repeat(MAX_LIVES - livesLeft);
   const hint = document.getElementById('hint');
   hint.textContent = livesLeft <= 0
-    ? 'NO LIVES LEFT -- COME BACK AFTER MIDNIGHT (PKT)'
-    : 'LIVES RESET AT MIDNIGHT (PKT)';
+    ? 'NO BITS LEFT -- COME BACK AFTER MIDNIGHT (PKT)'
+    : 'BITS RESET AT MIDNIGHT (PKT)';
   hint.classList.toggle('empty', livesLeft <= 0);
 }
 

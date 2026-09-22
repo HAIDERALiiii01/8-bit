@@ -11,9 +11,9 @@ snake_bp = Blueprint(
 )
 
 GAME_NAME = "Snake"   # must match seed_games()
-GRID_COUNT = 28       # must match GRID_COUNT in snake.html
+GRID_COUNT = 25       # must match GRID_COUNT in snake.html
 POINTS_PER_FOOD = 10  # must match the score increment in snake.html
-SCORE_STEP = 500      # every full 500 points earns one coin_reward
+SCORE_STEP = 150      # every full 500 points earns one coin_reward
 MAX_REASONABLE_SCORE = GRID_COUNT * GRID_COUNT * POINTS_PER_FOOD
 
 

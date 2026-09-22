@@ -3,6 +3,7 @@ from auth import login_required, admin_required
 from bit.games.race.race import race_bp
 from bit.games.snake.snake import snake_bp
 from bit.games.game import PLAYS_PER_GAME_PER_DAY, get_coins, plays_left
+from bit.vending_machine import register_vending_routes
 
 bit_bp = Blueprint(
     "bit", __name__,
@@ -12,18 +13,13 @@ bit_bp = Blueprint(
 )
 bit_bp.register_blueprint(race_bp)
 bit_bp.register_blueprint(snake_bp)
+register_vending_routes(bit_bp)
 
 
 @bit_bp.route("/8-bit")
 @login_required
 def bit():
     return render_template("bit.html")
-
-
-@bit_bp.route("/8-bit/vending-machine")
-@login_required
-def vending_machine():
-    return render_template("vending_machine.html")
 
 
 @bit_bp.route("/8-bit/games")
