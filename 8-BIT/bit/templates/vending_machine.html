@@ -2,61 +2,61 @@
 {% block title %}Vending Machine{% endblock %}
 
 {% block content %}
-<section class="lobby lobby--narrow vend-page">
-    <h1 class="marquee">VENDING MACHINE</h1>
-    <p class="subtitle">SPEND YOUR COINS</p>
-
-    <div class="vend-machine">
-        <div class="vend-machine__glass">
-            <div class="vend-grid" id="vendGrid">
-                {% for product in products %}
-                <button type="button"
-                        class="vend-slot{% if product.stock_quantity <= 0 %} is-empty{% endif %}"
-                        data-id="{{ product.product_id }}"
-                        data-name="{{ product.product_name }}"
-                        data-price="{{ product.price }}"
-                        data-stock="{{ product.stock_quantity }}"
-                        data-desc="{{ product.description }}"
-                        {% if product.stock_quantity <= 0 %}disabled{% endif %}>
-                    <span class="vend-slot__code">{{ "%02d"|format(loop.index) }}</span>
-                    <span class="vend-slot__window">
-                        <img class="vend-slot__img"
-                             src="{{ url_for('bit.static', filename='images/vend/' ~ (product.product_name|lower|replace(' ', '-')) ~ '.png') }}"
-                             alt=""
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span class="vend-slot__emoji" style="display:none;">🧃</span>
-                    </span>
-                    <span class="vend-slot__name">{{ product.product_name }}</span>
-                    <span class="vend-slot__price">{{ product.price }}&cent;</span>
-                    {% if product.stock_quantity <= 0 %}
-                        <span class="vend-slot__tag vend-slot__tag--empty">SOLD OUT</span>
-                    {% else %}
-                        <span class="vend-slot__tag">x{{ product.stock_quantity }}</span>
-                    {% endif %}
-                </button>
-                {% else %}
-                <p class="coming-soon">NO ITEMS STOCKED YET</p>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="vend-machine__base">
-            <span class="vend-machine__tray-slot"></span>
-        </div>
+<section class="vend-page">
+    <div class="vend-page__header">
+        <h1 class="marquee">VENDING MACHINE</h1>
+        <p class="subtitle">SPEND YOUR COINS</p>
     </div>
 
-    <div class="cart-tray" id="cartTray">
-        <h3 class="cart-tray__title">YOUR TRAY</h3>
-        <ul class="cart-tray__list" id="cartList">
-            <li class="cart-tray__empty" id="cartEmpty">-- NOTHING SELECTED --</li>
-        </ul>
-        <div class="cart-tray__total">
-            TOTAL <span id="cartTotal">0</span>&cent; &middot;
-            BALANCE <span id="coinDisplay">{{ total_coins }}</span>&cent;
+    <div class="vend-page__layout">
+        <div class="vend-machine">
+            <div class="vend-machine__glass">
+                <div class="vend-grid" id="vendGrid">
+                    {% for product in products %}
+                    <button type="button"
+                            class="vend-slot{% if product.stock_quantity <= 0 %} is-empty{% endif %}"
+                            data-id="{{ product.product_id }}"
+                            data-name="{{ product.product_name }}"
+                            data-price="{{ product.price }}"
+                            data-stock="{{ product.stock_quantity }}"
+                            data-desc="{{ product.description }}"
+                            {% if product.stock_quantity <= 0 %}disabled{% endif %}>
+                        <span class="vend-slot__code">{{ "%02d"|format(loop.index) }}</span>
+                        <span class="vend-slot__window">
+                            <img class="vend-slot__img"
+                                 src="{{ url_for('bit.static', filename='images/vend/' ~ (product.product_name|lower|replace(' ', '-')) ~ '.jfif') }}"
+                                 alt="{{ product.product_name }}"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <span class="vend-slot__emoji" style="display:none;">🧃</span>
+                        </span>
+                        <span class="vend-slot__badge{% if product.stock_quantity <= 0 %} vend-slot__badge--empty{% endif %}">
+                            {% if product.stock_quantity <= 0 %}SOLD OUT{% else %}x{{ product.stock_quantity }}{% endif %}
+                        </span>
+                    </button>
+                    {% else %}
+                    <p class="coming-soon">NO ITEMS STOCKED YET</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="vend-machine__base">
+                <span class="vend-machine__tray-slot"></span>
+            </div>
         </div>
-        <button type="button" class="btn btn--secondary btn--block" id="checkoutBtn" disabled>
-            INSERT COINS &amp; BUY
-        </button>
-        <p class="cart-tray__msg" id="cartMsg"></p>
+
+        <div class="cart-tray" id="cartTray">
+            <h3 class="cart-tray__title">YOUR TRAY</h3>
+            <ul class="cart-tray__list" id="cartList">
+                <li class="cart-tray__empty" id="cartEmpty">-- NOTHING SELECTED --</li>
+            </ul>
+            <div class="cart-tray__total">
+                TOTAL <span id="cartTotal">0</span>&cent; &middot;
+                BALANCE <span id="coinDisplay">{{ total_coins }}</span>&cent;
+            </div>
+            <button type="button" class="btn btn--secondary btn--block" id="checkoutBtn" disabled>
+                INSERT COINS &amp; BUY
+            </button>
+            <p class="cart-tray__msg" id="cartMsg"></p>
+        </div>
     </div>
 
     <a class="back-link" href="{{ url_for('bit.bit') }}">&larr; Back to lobby</a>
@@ -77,6 +77,17 @@
             <button type="button" class="btn btn--cyan btn--small" id="vmPlus">+</button>
         </div>
         <button type="button" class="btn btn--block" id="vmAdd">ADD TO TRAY</button>
+    </div>
+</div>
+
+<!-- purchase confirmation modal -->
+<div class="vend-modal" id="thanksModal" hidden>
+    <div class="vend-modal__backdrop" id="thanksModalBackdrop"></div>
+    <div class="vend-modal__card" role="dialog" aria-modal="true">
+        <span class="vend-modal__window">🧾</span>
+        <h2 class="vend-modal__title">THANKS FOR SHOPPING!</h2>
+        <p class="vend-modal__desc">Your bill has been emailed to you.</p>
+        <button type="button" class="btn btn--block" id="thanksClose">GOT IT</button>
     </div>
 </div>
 
@@ -108,6 +119,10 @@
     const coinDisplay = document.getElementById('coinDisplay');
     const dispenseFx = document.getElementById('dispenseFx');
 
+    const thanksModal = document.getElementById('thanksModal');
+    const thanksModalBackdrop = document.getElementById('thanksModalBackdrop');
+    const thanksClose = document.getElementById('thanksClose');
+
     let cart = {};        // id -> { name, price, qty, stock }
     let activeSlot = null;
     let activeQty = 1;
@@ -129,6 +144,16 @@
         setTimeout(() => { modal.hidden = true; }, 150);
     }
 
+    function openThanksModal() {
+        thanksModal.hidden = false;
+        requestAnimationFrame(() => thanksModal.classList.add('is-open'));
+    }
+
+    function closeThanksModal() {
+        thanksModal.classList.remove('is-open');
+        setTimeout(() => { thanksModal.hidden = true; }, 150);
+    }
+
     function stockRemaining(slot) {
         const id = slot.dataset.id;
         const already = cart[id] ? cart[id].qty : 0;
@@ -147,6 +172,8 @@
 
     modalClose.addEventListener('click', closeModal);
     modalBackdrop.addEventListener('click', closeModal);
+    thanksClose.addEventListener('click', closeThanksModal);
+    thanksModalBackdrop.addEventListener('click', closeThanksModal);
 
     vmMinus.addEventListener('click', () => {
         activeQty = Math.max(1, activeQty - 1);
@@ -212,7 +239,10 @@
         try {
             const res = await fetch("{{ url_for('bit.checkout') }}", {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content,
+                },
                 body: JSON.stringify({ cart: payload }),
             });
             const result = await res.json();
@@ -230,6 +260,9 @@
             playDispenseAnimation();
             cart = {};
             renderCart();
+
+            // show the thanks popup once the dispense animation has played out
+            setTimeout(openThanksModal, 900);
         } catch (err) {
             cartMsg.textContent = 'Something jammed. Try again.';
             checkoutBtn.disabled = false;

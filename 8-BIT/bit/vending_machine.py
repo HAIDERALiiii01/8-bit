@@ -1,8 +1,10 @@
+import logging
 from flask import render_template, session, request, jsonify
 from auth import login_required
 from extensions import db
-from models import Products, Orders, OrderItems, CoinTransactions
+from models import Products, Orders, OrderItems, CoinTransactions, User
 from bit.games.game import get_coins
+from bit.mail import send_receipt_email
 
 
 def register_vending_routes(bit_bp):
@@ -79,5 +81,15 @@ def register_vending_routes(bit_bp):
         ))
 
         db.session.commit()
+
+        # Email the receipt. This runs after commit, so a failure here never
+        # rolls back a completed purchase -- coins are already spent and
+        # stock already decremented. We just log it and let the purchase
+        # succeed from the user's point of view.
+        user = User.query.get(uid)
+        try:
+            send_receipt_email(user, order)
+        except Exception:
+            logging.exception("Failed to send receipt email for order %s", order.order_id)
 
         return jsonify(ok=True, new_balance=get_coins(uid), order_id=order.order_id)
