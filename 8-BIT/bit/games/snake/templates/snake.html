@@ -114,12 +114,17 @@
     background: var(--neon-pink);
     box-shadow: 0 4px 0 #8f2560;
   }
+  button.tertiary {
+    background: var(--neon-cyan);
+    box-shadow: 0 4px 0 #1e8f8f;
+  }
   button:hover:not(:disabled) { filter: brightness(1.08); }
   button:active:not(:disabled) {
     transform: translateY(3px);
     box-shadow: 0 1px 0 #2f7a26;
   }
   button.secondary:active:not(:disabled) { box-shadow: 0 1px 0 #8f2560; }
+  button.tertiary:active:not(:disabled) { box-shadow: 0 1px 0 #1e8f8f; }
   button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
@@ -194,6 +199,54 @@
   }
   .hint.empty { color: var(--neon-pink); }
 
+  /* ---- leaderboard dropdown ---- */
+  .leaderboard-wrap {
+    margin-top: 16px;
+  }
+  .leaderboard-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    background: #0a0716;
+    border: 3px solid #000;
+    border-radius: 4px;
+    margin-top: 0;
+  }
+  .leaderboard-panel.open {
+    max-height: 320px;
+    margin-top: 10px;
+  }
+  .leaderboard-inner {
+    padding: 12px 14px;
+  }
+  .leaderboard-loading,
+  .leaderboard-empty {
+    font-size: 9px;
+    color: var(--neon-cyan);
+    text-align: center;
+    padding: 6px 0;
+  }
+  table.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9px;
+  }
+  table.leaderboard-table th,
+  table.leaderboard-table td {
+    padding: 6px 4px;
+    text-align: left;
+  }
+  table.leaderboard-table th {
+    color: var(--neon-cyan);
+    border-bottom: 2px solid var(--border);
+  }
+  table.leaderboard-table td { color: var(--text); }
+  table.leaderboard-table tr:first-child td { color: var(--neon-yellow); }
+  table.leaderboard-table td:first-child,
+  table.leaderboard-table th:first-child { width: 24px; }
+  table.leaderboard-table td:last-child,
+  table.leaderboard-table th:last-child { text-align: right; }
+
   @media (max-width: 420px) {
     .stat-row { font-size: 8px; }
   }
@@ -218,6 +271,7 @@
   <div class="controls">
     <button id="startBtn">START GAME</button>
     <button id="muteBtn" class="secondary">&#128264; MUSIC OFF</button>
+    <button id="leaderboardBtn" class="tertiary" type="button">&#127942; View High Score</button>
   </div>
 
   <div class="screen-wrap">
@@ -226,6 +280,19 @@
     <div class="overlay" id="overlay">
       <div class="big">GAME OVER</div>
       <div class="small" id="overlayScore">SCORE: 0</div>
+    </div>
+  </div>
+
+  <div class="leaderboard-wrap">
+    <div class="leaderboard-panel" id="leaderboardPanel">
+      <div class="leaderboard-inner">
+        <div class="leaderboard-loading" id="leaderboardLoading">LOADING...</div>
+        <div class="leaderboard-empty" id="leaderboardEmpty" style="display:none;">NO SCORES RECORDED YET</div>
+        <table class="leaderboard-table" id="leaderboardTable" style="display:none;">
+          <thead><tr><th>#</th><th>PLAYER</th><th>SCORE</th></tr></thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -432,6 +499,12 @@ async function reportScore(finalScore) {
   renderLives();
   busy = false;
   refreshStart(); // stays disabled if that was the last life
+
+  // this run may have changed the standings -- force a fresh fetch next open
+  leaderboardLoaded = false;
+  if (leaderboardPanel.classList.contains('open')) {
+    loadLeaderboard();
+  }
 }
 
 const DIRECTION_KEYS = {
@@ -496,6 +569,48 @@ muteBtn.addEventListener('click', () => {
 });
 
 document.getElementById('startBtn').addEventListener('click', startGame);
+
+// ---- Top 5 leaderboard dropdown: fetched lazily on first open, re-fetched after each run ----
+const leaderboardBtn = document.getElementById('leaderboardBtn');
+const leaderboardPanel = document.getElementById('leaderboardPanel');
+const leaderboardLoading = document.getElementById('leaderboardLoading');
+const leaderboardEmpty = document.getElementById('leaderboardEmpty');
+const leaderboardTable = document.getElementById('leaderboardTable');
+const leaderboardBody = document.getElementById('leaderboardBody');
+let leaderboardLoaded = false;
+
+async function loadLeaderboard() {
+  leaderboardLoading.style.display = 'block';
+  leaderboardEmpty.style.display = 'none';
+  leaderboardTable.style.display = 'none';
+  try {
+    const res = await fetch('{{ url_for("bit.snake.leaderboard") }}');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    leaderboardLoading.style.display = 'none';
+    if (!data.leaderboard || data.leaderboard.length === 0) {
+      leaderboardEmpty.style.display = 'block';
+      return;
+    }
+    leaderboardBody.innerHTML = data.leaderboard.map((row, i) =>
+      `<tr><td>${i + 1}</td><td>${row.username}</td><td>${row.high_score}</td></tr>`
+    ).join('');
+    leaderboardTable.style.display = 'table';
+    leaderboardLoaded = true;
+  } catch (err) {
+    leaderboardLoading.textContent = 'COULD NOT LOAD';
+    console.error('leaderboard fetch failed:', err);
+  }
+}
+
+leaderboardBtn.addEventListener('click', () => {
+  const opening = !leaderboardPanel.classList.contains('open');
+  leaderboardPanel.classList.toggle('open');
+  leaderboardBtn.innerHTML = opening ? '&#127942; HIDE High Score' : '&#127942; High Score';
+  if (opening && !leaderboardLoaded) {
+    loadLeaderboard();
+  }
+});
 
 resetState();
 draw();

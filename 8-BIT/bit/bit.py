@@ -4,6 +4,7 @@ from bit.games.race.race import race_bp
 from bit.games.snake.snake import snake_bp
 from bit.games.game import PLAYS_PER_GAME_PER_DAY, get_coins, plays_left
 from bit.vending_machine import register_vending_routes
+from bit.dashboard import register_dashboard_routes
 
 bit_bp = Blueprint(
     "bit", __name__,
@@ -11,9 +12,11 @@ bit_bp = Blueprint(
     static_folder="static",
     static_url_path="/bit/static"
 )
+
 bit_bp.register_blueprint(race_bp)
 bit_bp.register_blueprint(snake_bp)
 register_vending_routes(bit_bp)
+register_dashboard_routes(bit_bp)
 
 
 @bit_bp.route("/8-bit")
@@ -32,7 +35,3 @@ def games():
                            max_lives=PLAYS_PER_GAME_PER_DAY)
 
 
-@bit_bp.route("/8-bit/dashboard")
-@admin_required
-def dashboard():
-    return render_template("dashboard.html")

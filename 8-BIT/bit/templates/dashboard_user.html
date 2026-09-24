@@ -1,0 +1,109 @@
+{% extends "bit_base.html" %}
+{% block title %}{{ user.username }} — Player File{% endblock %}
+
+{% block content %}
+<section class="lobby">
+    <h1 class="marquee">PLAYER FILE</h1>
+    <p class="subtitle">
+        {{ user.username }}
+        {% if user.is_admin %}<span class="admin-badge">ADMIN</span>{% endif %}
+    </p>
+
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-card__label">EMAIL</div>
+            <div class="stat-card__value" style="font-size: 16px;">{{ user.email }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__label">AGE / GENDER</div>
+            <div class="stat-card__value" style="font-size: 20px;">{{ user.age }} / {{ user.gender }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__label">COIN BALANCE</div>
+            <div class="stat-card__value">{{ balance }}</div>
+        </div>
+        <div class="stat-card stat-card--pink">
+            <div class="stat-card__label">TOTAL SPENT</div>
+            <div class="stat-card__value">{{ total_spent }}</div>
+        </div>
+        <div class="stat-card stat-card--yellow">
+            <div class="stat-card__label">GAMES PLAYED</div>
+            <div class="stat-card__value">{{ total_sessions }}</div>
+        </div>
+    </div>
+
+    <div class="dash-section">
+        <h2 class="dash-section__title">&gt; RECENT SESSIONS</h2>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr><th>Game</th><th>Score</th><th>Coins earned</th><th>Played at (UTC)</th></tr>
+                </thead>
+                <tbody>
+                    {% for s in sessions %}
+                    <tr>
+                        <td>{{ s.game.game_name }}</td>
+                        <td>{{ s.score }}</td>
+                        <td>{{ s.coins_earned }}</td>
+                        <td>{{ s.played_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4">No sessions yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dash-section">
+        <h2 class="dash-section__title">&gt; ORDERS</h2>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr><th>Order #</th><th>Total</th><th>Status</th><th>Purchased at (UTC)</th></tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td>#{{ o.order_id }}</td>
+                        <td>{{ o.total_amount }}</td>
+                        <td>
+                            <span class="status-pill {{ 'status-pill--on' if o.payment_status == 'completed' else 'status-pill--off' }}">
+                                {{ o.payment_status|upper }}
+                            </span>
+                        </td>
+                        <td>{{ o.purchased_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4">No orders yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dash-section">
+        <h2 class="dash-section__title">&gt; COIN LEDGER</h2>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr><th>Type</th><th>Amount</th><th>Date (UTC)</th></tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr>
+                        <td>{{ t.transaction_type }}</td>
+                        <td>{{ '+' if t.amount > 0 else '' }}{{ t.amount }}</td>
+                        <td>{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3">No transactions yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a class="back-link" href="{{ url_for('bit.dashboard') }}">&larr; Back to dashboard</a>
+</section>
+{% endblock %}

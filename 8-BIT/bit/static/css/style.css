@@ -1492,3 +1492,179 @@ select {
   .vend-page__layout { flex-direction: column; align-items: center; }
   .vend-machine, .cart-tray { max-width: 380px; width: 100%; }
 }
+
+/* ==========================================================================
+   Admin dashboard
+   Append this to the END of your existing style.css -- it reuses the same
+   tokens (--bg-screen, --neon-*, --font-display/--font-body, --border) so
+   it reads as part of the same arcade instead of a bolted-on admin panel.
+   ========================================================================== */
+
+.dash-section {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.dash-section__title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 6px rgba(52, 226, 226, 0.6);
+  margin: 0 0 14px;
+  letter-spacing: 1px;
+}
+
+/* -- Stat cards ------------------------------------------------------------ */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  background: var(--bg-screen);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.stat-card__label {
+  font-family: var(--font-display);
+  font-size: 8px;
+  color: var(--neon-cyan);
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+
+.stat-card__value {
+  font-family: var(--font-body);
+  font-size: 30px;
+  color: var(--neon-green);
+  text-shadow: 0 0 6px rgba(124, 255, 107, 0.6);
+  line-height: 1.2;
+  margin-top: 4px;
+}
+
+.stat-card--pink .stat-card__value {
+  color: var(--neon-pink);
+  text-shadow: 0 0 6px rgba(255, 79, 163, 0.6);
+}
+
+.stat-card--yellow .stat-card__value {
+  color: var(--neon-yellow);
+  text-shadow: 0 0 6px rgba(255, 212, 71, 0.6);
+}
+
+/* -- Data tables ------------------------------------------------------------ */
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-screen);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+}
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.dash-table th,
+.dash-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.dash-table th {
+  font-family: var(--font-display);
+  font-size: 8px;
+  color: var(--neon-cyan);
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dash-table tr:last-child td { border-bottom: none; }
+.dash-table tr:hover td { background: rgba(255, 255, 255, 0.03); }
+
+/* -- Status pill ------------------------------------------------------------ */
+
+.status-pill {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 7px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+}
+
+.status-pill--on {
+  color: var(--neon-green);
+  border: 1px solid var(--neon-green);
+  text-shadow: 0 0 4px rgba(124, 255, 107, 0.6);
+}
+
+.status-pill--off {
+  color: var(--neon-pink);
+  border: 1px solid var(--neon-pink);
+  text-shadow: 0 0 4px rgba(255, 79, 163, 0.6);
+}
+
+/* -- Inline admin forms ------------------------------------------------------ */
+
+.inline-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-form input[type="number"] {
+  width: 72px;
+  padding: 6px 8px;
+  font-size: 16px;
+}
+
+.btn--tiny {
+  font-size: 7px;
+  padding: 6px 9px;
+  box-shadow: 0 3px 0 #2f7a26;
+}
+.btn--tiny:active:not(:disabled) {
+  box-shadow: 0 1px 0 #2f7a26;
+}
+.btn--secondary.btn--tiny {
+  box-shadow: 0 3px 0 #8f2560;
+}
+.btn--secondary.btn--tiny:active:not(:disabled) {
+  box-shadow: 0 1px 0 #8f2560;
+}
+
+.admin-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-family: var(--font-display);
+  font-size: 7px;
+  color: var(--neon-pink);
+  text-shadow: 0 0 4px rgba(255, 79, 163, 0.6);
+}
+
+/* -- Player search ------------------------------------------------------------ */
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.search-bar input[type="text"] { flex: 1; }
+
+@media (max-width: 560px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-card__value { font-size: 22px; }
+  .inline-form { flex-wrap: wrap; }
+}

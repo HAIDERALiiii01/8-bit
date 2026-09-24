@@ -2,14 +2,194 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<section class="lobby lobby--narrow">
+<section class="lobby">
     <h1 class="marquee">ADMIN DASHBOARD</h1>
     <p class="subtitle">Welcome, {{ session.username }}</p>
 
-    <div class="terminal-box">
-        <p class="terminal-line">&gt; system online</p>
-        <p class="terminal-line">&gt; no panels configured yet</p>
-        <p class="terminal-line blink">&gt; _</p>
+    <!-- ================= STATS ================= -->
+    <div class="dash-section">
+        <h2 class="dash-section__title">&gt; SYSTEM STATS</h2>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-card__label">TOTAL PLAYERS</div>
+                <div class="stat-card__value">{{ stats.total_players }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">GAMES PLAYED (ALL TIME)</div>
+                <div class="stat-card__value">{{ stats.sessions_total }}</div>
+            </div>
+            <div class="stat-card stat-card--yellow">
+                <div class="stat-card__label">PLAYERS ACTIVE TODAY</div>
+                <div class="stat-card__value">{{ stats.players_today }}</div>
+            </div>
+            <div class="stat-card stat-card--yellow">
+                <div class="stat-card__label">GAMES PLAYED TODAY</div>
+                <div class="stat-card__value">{{ stats.sessions_today }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">COINS EARNED (TOTAL)</div>
+                <div class="stat-card__value">{{ stats.coins_earned_total }}</div>
+            </div>
+            <div class="stat-card stat-card--pink">
+                <div class="stat-card__label">COINS SPENT (TOTAL)</div>
+                <div class="stat-card__value">{{ stats.coins_spent_total }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">COINS EARNED TODAY</div>
+                <div class="stat-card__value">{{ stats.coins_earned_today }}</div>
+            </div>
+            <div class="stat-card stat-card--pink">
+                <div class="stat-card__label">COINS SPENT TODAY</div>
+                <div class="stat-card__value">{{ stats.coins_spent_today }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">COINS IN CIRCULATION</div>
+                <div class="stat-card__value">{{ stats.coins_in_circulation }}</div>
+            </div>
+            <div class="stat-card stat-card--pink">
+                <div class="stat-card__label">PENDING ORDERS</div>
+                <div class="stat-card__value">{{ stats.pending_orders }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= GAMES ================= -->
+    <div class="dash-section">
+        <h2 class="dash-section__title">&gt; GAMES</h2>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Game</th>
+                        <th>Status</th>
+                        <th>Total plays</th>
+                        <th>Reward (coins)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for game in games %}
+                    <tr>
+                        <td>{{ game.game_name }}</td>
+                        <td>
+                            <span class="status-pill {{ 'status-pill--on' if game.status else 'status-pill--off' }}">
+                                {{ 'ENABLED' if game.status else 'DISABLED' }}
+                            </span>
+                        </td>
+                        <td>{{ game_play_counts.get(game.game_id, 0) }}</td>
+                        <td>
+                            <form class="inline-form" method="post"
+                                  action="{{ url_for('bit.update_game_reward', game_id=game.game_id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="number" name="coin_reward" min="0" value="{{ game.coin_reward }}" required>
+                                <button class="btn btn--cyan btn--tiny" type="submit">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('bit.toggle_game', game_id=game.game_id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn {{ 'btn--secondary' if game.status else '' }} btn--tiny" type="submit">
+                                    {{ 'Disable' if game.status else 'Enable' }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= VENDING MACHINE ================= -->
+    <div class="dash-section">
+        <h2 class="dash-section__title">&gt; VENDING MACHINE</h2>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Price / Stock</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.product_name }}</td>
+                        <td>{{ product.category }}</td>
+                        <td>
+                            <span class="status-pill {{ 'status-pill--on' if product.status == 'active' else 'status-pill--off' }}">
+                                {{ 'ACTIVE' if product.status == 'active' else 'OUT OF STOCK' }}
+                            </span>
+                        </td>
+                        <td>
+                            <form class="inline-form" method="post"
+                                  action="{{ url_for('bit.update_product', product_id=product.product_id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="number" name="price" min="0" value="{{ product.price }}" required>
+                                <input type="number" name="stock_quantity" min="0" value="{{ product.stock_quantity }}" required>
+                                <button class="btn btn--cyan btn--tiny" type="submit">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('bit.toggle_product', product_id=product.product_id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn {{ 'btn--secondary' if product.status == 'active' else '' }} btn--tiny" type="submit">
+                                    {{ 'Mark out of stock' if product.status == 'active' else 'Mark active' }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= PLAYERS ================= -->
+    <div class="dash-section">
+        <h2 class="dash-section__title">&gt; PLAYERS</h2>
+        <form class="search-bar" method="get" action="{{ url_for('bit.dashboard') }}">
+            <input type="text" name="q" placeholder="Search username or email..." value="{{ search }}">
+            <button class="btn btn--cyan btn--tiny" type="submit">Search</button>
+        </form>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Balance</th>
+                        <th>Sessions</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {{ user.username }}
+                            {% if user.is_admin %}<span class="admin-badge">ADMIN</span>{% endif %}
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.age }}</td>
+                        <td>{{ user.gender }}</td>
+                        <td>{{ balances_by_user.get(user.id, 0) }}</td>
+                        <td>{{ sessions_by_user.get(user.id, 0) }}</td>
+                        <td>
+                            <a class="btn btn--cyan btn--tiny" href="{{ url_for('bit.user_detail', user_id=user.id) }}">View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7">No players match "{{ search }}".</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <a class="back-link" href="{{ url_for('bit.bit') }}">&larr; Back to lobby</a>

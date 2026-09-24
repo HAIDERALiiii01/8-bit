@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request, session, jsonify
 
 from auth import login_required
 from bit.games.game import PLAYS_PER_GAME_PER_DAY, get_coins, get_game, plays_left, record_play
+from models import db, User, GameSessions
 
 race_bp = Blueprint(
     "race", __name__,
@@ -16,6 +17,7 @@ GAME_NAME = "Turtle Race"   # must match seed_games()
 RACER_ORDER = ["yellow", "red", "purple", "blue", "green", "black"]
 FINISH = 100      # abstract finish line; the frontend maps 0..FINISH onto its pixel track
 MAX_TICKS = 500   # safety cap so a freak run can't loop forever
+LEADERBOARD_SIZE = 5
 
 
 def simulate_race():
@@ -39,6 +41,20 @@ def simulate_race():
         winner = max(positions, key=positions.get)  # extremely unlikely safety net
 
     return frames, winner
+
+
+def _top_wins(game_id, limit=LEADERBOARD_SIZE):
+    """Top players by number of winning race sessions (score == 1 marks a win)."""
+    rows = (
+        db.session.query(User.username, db.func.count(GameSessions.session_id).label("wins"))
+        .join(GameSessions, GameSessions.user_id == User.id)
+        .filter(GameSessions.game_id == game_id, GameSessions.score == 1)
+        .group_by(User.id, User.username)
+        .order_by(db.desc("wins"))
+        .limit(limit)
+        .all()
+    )
+    return [{"username": username, "wins": wins} for username, wins in rows]
 
 
 @race_bp.route("/8-bit/games/race")
@@ -80,3 +96,10 @@ def run_race():
         "coins": coins,
         "plays_left": plays_left(uid, GAME_NAME),
     })
+
+
+@race_bp.route("/8-bit/games/race/api/leaderboard")
+@login_required
+def leaderboard():
+    game = get_game(GAME_NAME)
+    return jsonify({"leaderboard": _top_wins(game.game_id) if game else []})

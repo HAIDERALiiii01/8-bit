@@ -143,3 +143,21 @@ class Products(db.Model):
 
     def __repr__(self):
         return f"<Product {self.product_id} name={self.product_name}>"
+
+
+class InventoryManagement(db.Model):
+    __tablename__ = "inventorymanagement"
+
+    inventory_management_id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.product_id"), nullable=False)
+    quantity_changed = db.Column(db.Integer, nullable=False)
+    action_type = db.Column(db.String(50), nullable=False)  # e.g. "restock", "sale", "adjustment"
+    changed_at = db.Column(
+        db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    # Many inventory records -> one product.
+    product = db.relationship("Products", backref="inventory_records")
+
+    def __repr__(self):
+        return f"<InventoryManagement {self.inventory_management_id} product={self.product_id} change={self.quantity_changed}>"

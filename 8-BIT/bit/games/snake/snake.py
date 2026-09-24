@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, session, jsonify
 
 from auth import login_required
 from bit.games.game import PLAYS_PER_GAME_PER_DAY, get_coins, get_game, get_high_score, plays_left, record_play
+from models import db, User, GameSessions
 
 snake_bp = Blueprint(
     "snake", __name__,
@@ -15,11 +16,26 @@ GRID_COUNT = 25       # must match GRID_COUNT in snake.html
 POINTS_PER_FOOD = 10  # must match the score increment in snake.html
 SCORE_STEP = 150      # every full 500 points earns one coin_reward
 MAX_REASONABLE_SCORE = GRID_COUNT * GRID_COUNT * POINTS_PER_FOOD
+LEADERBOARD_SIZE = 5
 
 
 def coins_for_score(score, reward):
     """500 -> 1x reward, 1000 -> 2x, ... (below 500 earns nothing)."""
     return (score // SCORE_STEP) * reward
+
+
+def _top_scores(game_id, limit=LEADERBOARD_SIZE):
+    """Top players by their single highest recorded score."""
+    rows = (
+        db.session.query(User.username, db.func.max(GameSessions.score).label("high_score"))
+        .join(GameSessions, GameSessions.user_id == User.id)
+        .filter(GameSessions.game_id == game_id)
+        .group_by(User.id, User.username)
+        .order_by(db.desc("high_score"))
+        .limit(limit)
+        .all()
+    )
+    return [{"username": username, "high_score": high_score} for username, high_score in rows]
 
 
 @snake_bp.route("/8-bit/games/snake")
@@ -68,3 +84,10 @@ def finish_run():
         "new_high_score": score > previous_best,
         "plays_left": plays_left(uid, GAME_NAME),
     })
+
+
+@snake_bp.route("/8-bit/games/snake/api/leaderboard")
+@login_required
+def leaderboard():
+    game = get_game(GAME_NAME)
+    return jsonify({"leaderboard": _top_scores(game.game_id) if game else []})
