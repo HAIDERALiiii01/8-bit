@@ -1,196 +1,369 @@
-# 🕹️ 8-BIT Vending Machine
+# 🕹️ 8-BIT Studios
 
 <p align="center">
   <img src="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bHphdzg3YmY5cmczY3VpcnliNHlnYmVnZnhqbWY4enJyeG43MHpnMyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uchGqpI5drRdK/giphy.gif" alt="8-BIT Vending Machine" width="800"/>
 </p>
-> **🕹️ Buy snacks. Play games. Earn coins. Get your reward.**
+
+<p align="center">
+  <strong>🕹️ Play games. Earn coins. Buy snacks. Get rewarded.</strong>
+</p>
 
 ---
 
-## 🎯 What it does
+## 🎯 About the Project
 
-**8-BIT Vending Machine** is a retro-inspired vending machine web application built as a **Database Management System project**.
+**8-BIT Studios** is a retro-inspired, database-driven vending machine web application developed as a **Database Management System (DBMS) project**.
 
-Instead of simply inserting money and selecting a product, users earn virtual coins by playing mini-games and use those coins to purchase items from the vending machine.
+Instead of simply inserting money into a vending machine, users earn virtual coins by playing mini-games. Those coins can then be used to purchase products from the vending machine.
 
-The system includes:
+The application combines:
 
-- 🔐 User **Sign Up / Login**
-- 🕹️ Mini-games for earning coins
-- 🐍 **Snake Game**
-- 🐢 **Turtle Race**
-- 🪙 Coin-based purchasing system
-- 🥤 Vending machine product selection
-- 🧾 Purchase bills
-- 📧 Email notifications/bills
-- 🗄️ Database storage for users, games, coins, and purchases
-- 👑 Admin dashboard for managing the vending machine
-- 📊 Persistent records of system activity
+- 🔐 User registration and authentication
+- 🕹️ Mini-games
+- 🪙 Virtual coin economy
+- 🥤 Vending machine
+- 🧾 Purchase and billing system
+- 📧 Email bill delivery
+- 🗄️ PostgreSQL database
+- 👑 Admin management system
+- 📊 Activity statistics and analytics
 
-The project is currently **under development**, so additional features and improvements may be added as development continues.
+The entire system is connected through a Flask backend and uses PostgreSQL for persistent data storage.
 
 ---
 
-## 🕹️ How it works
+## 🎮 How It Works
 
-The main idea is simple:
+The core flow of the application is:
 
-**Sign Up / Login → Play Games → Earn Coins → Choose Products → Purchase → Receive Bill**
+```text
+Register
+   ↓
+Login
+   ↓
+Play Games
+   ↓
+Earn Coins
+   ↓
+Open Vending Machine
+   ↓
+Select Products
+   ↓
+Purchase with Coins
+   ↓
+Generate Bill
+   ↓
+Send Bill to Registered Gmail
+```
 
-### 1. 🔐 Create an account
+### 1. 🔐 Register & Login
 
-Users can create an account through the **Sign Up** page and then log in to access the vending machine.
+A new user creates an account by providing their required information.
 
-User information is stored in the PostgreSQL database.
+After registration, the user can log in and access the main 8-BIT application.
 
-### 2. 🕹️ Play games
+User information and account data are stored in PostgreSQL.
 
-Before purchasing products, users can earn coins by playing two mini-games:
+---
+
+### 2. 🕹️ Play Games
+
+Users can earn coins by playing two mini-games:
 
 - 🐍 **Snake**
 - 🐢 **Turtle Race**
 
-Each user gets **3 game chances per day**.
+Each game contributes to the user's gaming activity and reward system.
 
-The better the user performs, the more coins they can earn.
+The application also keeps records of game sessions, scores, coins earned, and play timestamps.
 
-### 3. 🪙 Earn coins
+---
 
-Game scores are converted into coins that can be used inside the vending machine.
+### 3. 🪙 Earn Coins
 
-For example:
+Players receive coins as rewards from gameplay.
+
+The coins act as the virtual currency of the 8-BIT Studios.
 
 ```text
-Better Score → More Coins → More Purchasing Power
+Game
+  ↓
+Score / Result
+  ↓
+Reward
+  ↓
+Coins
 ```
 
-Coins are stored and managed through the database so that the user's balance can be tracked.
+The user's coin balance is stored in the database and can be used for purchases.
 
-### 4. 🥤 Purchase products
+---
 
-Once the user has enough coins, they can browse the available vending machine items and purchase products using their earned coins.
+### 4. 🥤 Use the Vending Machine
 
-The system checks the user's available balance before completing the purchase.
+After earning enough coins, users can enter the vending machine and browse the available products.
 
-### 5. 🧾 Generate a bill
+Products include items such as:
 
-After a successful purchase, the system generates a bill containing information such as:
+- ☕ Chai
+- ☕ Coffee
+- 🥤 Coke
+- 🥤 Pakola
+- 🍟 Lays
+- 🍫 Snickers
+- 🥪 Egg Sandwich
+- 🕹️ Extra Bit
 
-- Customer
+Users can select products and quantities before completing their purchase.
+
+---
+
+### 5. 🧾 Purchase & Billing
+
+When a user makes a purchase, the system:
+
+1. Checks the user's available coins.
+2. Determines the selected products and quantities.
+3. Calculates the total cost.
+4. Deducts the required coins.
+5. Records the purchase in PostgreSQL.
+6. Generates a purchase bill.
+7. Sends the bill to the user's registered email address.
+
+The purchase therefore becomes a persistent database transaction rather than simply displaying a success message.
+
+---
+
+### 6. 📧 Email Bill
+
+After a successful purchase, the generated bill is sent to the user's registered **Gmail/email address**.
+
+The bill contains information such as:
+
+- Customer information
 - Purchased products
 - Quantity
-- Price
+- Product prices
 - Total amount
-- Purchase timestamp
+- Purchase information
+- Transaction timestamp
 
-The bill is also sent to the user's registered email address.
+---
 
-### 6. 🗄️ Store everything in the database
+# 👑 Admin Panel
 
-The project is designed around the database, so important operations are recorded rather than existing only temporarily.
+The application includes a protected admin area for managing and monitoring the 8-BIT system.
 
-Records include things such as:
+Unlike the normal user interface, the admin panel provides access to system-wide statistics, game controls, vending machine management, and user information.
 
-- User accounts
-- Game activity
+## 📊 Admin Statistics
+
+The admin can monitor important activity across the application, including:
+
+### Users
+
+- 👥 **Total registered players**
+- 🎮 **Users who played games today**
+- 🎯 **Total games played by users**
+
+### Coins
+
+- 🪙 **Total coins earned**
+- 💰 **Total coins spent**
+- 📈 **Coins earned today**
+- 📉 **Coins spent today**
+
+These statistics provide an overview of how the virtual economy is being used.
+
+---
+
+## 📈 Activity Analytics
+
+The admin panel also provides recent activity information.
+
+The dashboard displays:
+
+- 🪙 Coin activity over the **past 5 days**
+- 🎮 Game activity over the **past 5 days**
+
+This makes it possible to observe recent changes in gameplay and the virtual coin economy.
+
+---
+
+## 🎮 Game Management
+
+The admin can control the availability and reward behavior of games.
+
+### Game Controls
+
+Administrators can:
+
+- Enable games
+- Disable games
+- Control game availability
+- Configure game reward settings
+
+This allows the administrator to control which games are currently available to users without changing the application's source code.
+
+---
+
+## 🥤 Vending Machine Management
+
+The admin panel also provides management functionality for the vending machine.
+
+Administrators can manage the available vending machine products and their related information.
+
+This includes controlling the products presented to users and maintaining the vending machine's contents.
+
+---
+
+## 👥 Users
+
+The admin can access an **All Users** section containing information about registered users.
+
+This provides the administrator with an overview of the application's player accounts and their stored information.
+
+---
+
+# 🕹️ Games
+
+## 🐍 Snake
+
+The Snake game is one of the two ways users can earn coins.
+
+The player controls a snake, collects food, and attempts to achieve a higher score.
+
+```text
+Play Snake
+    ↓
+Collect Food
+    ↓
+Increase Score
+    ↓
+Earn Coins
+    ↓
+Spend Coins
+```
+
+Game activity and rewards are recorded in the database.
+
+---
+
+## 🐢 Turtle Race
+
+Turtle Race is the second game available in 8-BIT.
+
+Players participate in a turtle race and receive rewards based on the game's result.
+
+```text
+Start Race
+    ↓
+Turtles Compete
+    ↓
+Race Result
+    ↓
+Reward Coins
+```
+
+The game provides an alternative way for users to earn virtual currency.
+
+---
+
+# 🪙 Coin System
+
+Coins are the virtual currency used throughout the application.
+
+Users earn coins through games and spend them on vending machine products.
+
+```text
+        🕹️ GAME
+           │
+           ▼
+       GAME RESULT
+           │
+           ▼
+       🪙 COINS EARNED
+           │
+           ▼
+    🥤 VENDING MACHINE
+           │
+           ▼
+      🧾 PURCHASE
+           │
+           ▼
+    🪙 COINS SPENT
+           │
+           ▼
+     🗄️ DATABASE
+```
+
+The database keeps track of coin activity so that the system can calculate balances, earnings, spending, and statistics.
+
+---
+
+# 🗄️ Database
+
+**PostgreSQL** is used as the primary database for the application.
+
+**Flask-SQLAlchemy / SQLAlchemy** provides the connection between the Flask application and PostgreSQL.
+
+The database stores information related to:
+
+- Users
+- Games
+- Game sessions
 - Scores
-- Coins
+- Coin rewards
 - Products
+- Orders
+- Order items
 - Purchases
-- Purchase timestamps
-- Bills / transaction information
+- Inventory activity
+- Timestamps
+- Administrative information
 
-This allows the system to maintain a history of activity and purchases.
-
----
-
-## 👑 Admin Dashboard
-
-The application includes a separate **Admin Dashboard** for managing the vending machine.
-
-The dashboard is restricted to the designated administrator rather than being available to normal users.
-
-The admin can manage vending machine contents and monitor database-related information.
-
-Planned/admin functionality includes:
-
-- 📦 Add or update products
-- 💰 Update product prices
-- 📊 View stored records
-- 🧾 View purchase information
-- 👥 Manage system data
-- 🛠️ Maintain vending machine contents
-
-The admin dashboard is separate from the normal user experience.
+This allows the application to maintain persistent records of user activity and transactions.
 
 ---
 
-## 🗄️ Database
+# 🏗️ Application Architecture
 
-The project uses **PostgreSQL** as its database.
-
-The database stores the persistent information required by the vending machine system.
-
-The application uses **SQLAlchemy** to communicate with PostgreSQL from the Flask backend.
-
-A simplified flow looks like this:
+The project follows a database-backed Flask architecture:
 
 ```text
-                    ┌─────────────────┐
-                    │      User       │
-                    └────────┬────────┘
-                             │
-                       Login / Signup
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │    Game System  │
-                    └────────┬────────┘
-                             │
-                       Score → Coins
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │ Vending Machine│
-                    └────────┬────────┘
-                             │
-                         Purchase
-                             │
-                 ┌───────────┴───────────┐
-                 ▼                       ▼
-          PostgreSQL Database       Email Bill
-```
+┌──────────────────────────┐
+│        Frontend          │
+│     HTML / CSS / JS      │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│       Flask Backend      │
+│   Routes & Application   │
+│         Logic            │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│      SQLAlchemy ORM      │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│       PostgreSQL         │
+│      Database            │
+└──────────────────────────┘
 
-Every important transaction is intended to be recorded in the database.
+             │
+             ▼
+      📧 Email Service
+```
 
 ---
 
-## 📁 Project Structure
+# 🛠️ Tech Stack
 
-```text
-8-bit/
-│
-├── 8-BIT
-│
-├── 
-│
-├── 
-│
-├── uv.lock
-│
-├── .python-version
-├── pyproject.toml
-├── .gitignore
-└── README.md
-```
-
-> The project structure may change as new features are implemented.
-
----
-
-## ⚙️ Tech Stack
-
-### Backend
+## Backend
 
 - **Python**
 - **Flask**
@@ -198,266 +371,374 @@ Every important transaction is intended to be recorded in the database.
 - **SQLAlchemy**
 - **PostgreSQL**
 
-### Frontend
+## Frontend
 
 - **HTML**
 - **CSS**
 - **JavaScript**
+- **Jinja2**
 
-### Other
+## Games
 
-- **Jinja2** — Dynamic HTML templates
-- **Werkzeug** — Password hashing and security utilities
-- **python-dotenv** — Environment variable management
-- **Email services** — Sending purchase bills and notifications
+- **Python**
+- **JavaScript**
+- **HTML5/CSS**
+- Game-specific assets and audio
 
----
+## Utilities
 
-## 🔑 Authentication
-
-The application provides separate user authentication functionality.
-
-### User
-
-Users can:
-
-- Sign up
-- Log in
-- Play games
-- Earn coins
-- Purchase products
-- Receive purchase bills
-
-### Admin
-
-The administrator has access to the protected admin area and can manage the vending machine.
-
-The admin dashboard is not intended to be accessible to ordinary users.
+- **python-dotenv** — environment variable management
+- **Werkzeug** — password hashing and security utilities
+- **Email/SMTP** — purchase bill delivery
+- **uv** — Python project and dependency management
 
 ---
 
-## 🐍 Snake Game
-
-The Snake Game is one of the two mini-games used to earn coins.
-
-The player controls the snake and attempts to achieve the highest possible score.
+# 📁 Project Structure
 
 ```text
-Play Snake
-     ↓
-  Get Score
-     ↓
-Convert Score → Coins
-     ↓
-Use Coins → Purchase
+8-bit/
+│
+├── .venv/
+├── .env
+├── .gitignore
+├── .python-version
+├── pyproject.toml
+├── README.md
+└── uv.lock
+│
+├── 8-BIT/
+│   │
+│   ├── main.py
+│   ├── auth.py
+│   ├── dummy.py
+│   ├── extensions.py
+│   ├── models.py
+│   │
+│   ├── templates/
+│   │   ├── base.html
+│   │   ├── home.html
+│   │   ├── login.html
+│   │   └── register.html
+│   │
+│   └── static/
+│       ├── css/
+│       │   └── style.css
+│       └── js/
+│           └── script.js
+│
+├── favicon.png
+│
+└── bit/
+    │
+    ├── bit.py
+    ├── __init__.py
+    ├── dashboard.py
+    ├── mail.py
+    ├── vending_machine.py
+    │
+    ├── static/
+    │   ├── css/
+    │   │   └── style.css
+    │   └── images/
+    │       ├── admin/
+    │       ├── classic/
+    │       ├── race/
+    │       ├── snake/
+    │       └── vend/
+    │           ├── chai/
+    │           ├── coffee/
+    │           ├── coke/
+    │           ├── egg-sandwich/
+    │           ├── extra-bit/
+    │           ├── Lays/
+    │           ├── Pakola/
+    │           └── Snickers/
+    │
+    ├── templates/
+    │   ├── bit_base.html
+    │   ├── bit.html
+    │   ├── dashboard.html
+    │   ├── dashboard_user.html
+    │   ├── games.html
+    │   └── vending_machine.html
+    │
+    └── games/
+        │
+        ├── game.py
+        │
+        ├── race/
+        │   ├── race.py
+        │   ├── static/
+        │   │   └── bgm.mp3
+        │   └── templates/
+        │       └── race.html
+        │
+        └── snake/
+            ├── snake.py
+            ├── static/
+            │   ├── bgm.mp3
+            │   └── game_over.mp3
+            └── templates/
+                └── snake.html
 ```
 
-Each user has a limited number of game attempts per day.
+---
+
+# ⚙️ Getting Started
+
+## Prerequisites
+
+Before running the project, make sure you have:
+
+- **Python 3.12+**
+- **uv**
+- **PostgreSQL**
+- A Gmail/email account configured for sending purchase bills
 
 ---
 
-## 🐢 Turtle Race
-
-The Turtle Race is the second mini-game.
-
-Players participate in a race and receive a score/reward based on their performance.
-
-The game provides another way for users to earn coins before purchasing products.
-
----
-
-## 🪙 Coin System
-
-Coins act as the virtual currency of the vending machine.
-
-Users earn coins through gameplay and spend them on products.
-
-The basic concept is:
-
-```text
-                    GAME
-                      │
-                      ▼
-                    SCORE
-                      │
-                      ▼
-                    COINS
-                      │
-                      ▼
-                 BUY PRODUCT
-                      │
-                      ▼
-              UPDATE DATABASE
-```
-
-The system keeps track of the user's coin balance so purchases can be validated.
-
----
-
-## 🧾 Purchase System
-
-When a user purchases an item:
-
-1. The system checks the user's available coins.
-2. The selected product and quantity are determined.
-3. The total purchase cost is calculated.
-4. The user's coin balance is updated.
-5. The purchase is recorded in PostgreSQL.
-6. A bill is generated.
-7. The bill is sent to the user's registered email.
-
-This makes the purchase a complete database transaction rather than simply displaying a successful message.
-
----
-
-## 📧 Email Notifications
-
-The application can use the user's registered email address to send purchase-related information.
-
-The main purpose is to deliver the purchase bill after a successful transaction.
-
-Additional notification features may be added as the project develops.
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the repository
+## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/HAIDERALiiii01/ProjecTss
+git clone https://github.com/HAIDERALiiii01/ProjecTss.git
+```
+
+Then navigate to the 8-BIT project directory.
+
+```bash
 cd "ProjecTss/Gear 5/8-bit"
 ```
 
-### 2. Install dependencies
+---
+
+## 2. Install Dependencies with uv
+
+This project uses **uv** for Python dependency and virtual-environment management.
+
+Run:
 
 ```bash
 uv sync
 ```
 
-This creates the project's virtual environment and installs the dependencies defined in `pyproject.toml`.
+`uv` will create the project's virtual environment and install the dependencies defined by `pyproject.toml`.
 
-### 3. Configure PostgreSQL
+The committed `uv.lock` file ensures that the project's dependency versions can be reproduced consistently.
 
-Make sure **PostgreSQL** is installed and running on your system.
+---
 
-Create a PostgreSQL database for the project:
+## 3. Configure PostgreSQL
+
+Make sure PostgreSQL is installed and running.
+
+Create a PostgreSQL database for the project.
+
+For example:
 
 ```text
-Database: vending_machine
+Database name:
+vending_machine
 ```
 
-Then configure the database connection in the `.env` file so Flask-SQLAlchemy can connect to PostgreSQL.
+The Flask application uses SQLAlchemy to communicate with PostgreSQL.
 
-### 4. Configure environment variables
+---
 
-Create a `.env` file in the project root:
+## 4. Configure Environment Variables
+
+Create a `.env` file in the project root.
+
+Example:
 
 ```dotenv
-SECRET_KEY=
+SECRET_KEY=your_secret_key
 
-DATABASE_URL=
+DATABASE_URL=your_postgresql_connection_string
+
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_email_app_password
 ```
 
-> Do not commit `.env` or any credentials to GitHub.
+Use the actual environment variable names expected by your application configuration.
 
-### 5. Run the application
+> **Important:** Never commit `.env`, database credentials, email credentials, API keys, or other secrets to GitHub.
+
+---
+
+## 5. Run the Application
+
+Start the Flask application using `uv`:
 
 ```bash
-uv run python app.py
+uv run python main.py
 ```
 
-The Flask development server will then start locally.
+The application will start using Flask's development server.
 
-## 📝 Development Status
-
-🚧 **This project is currently under development.**
-
-The core concept and database architecture are being developed incrementally.
-
-### Current / Planned Features
-
-- [x] Flask application
-- [x] PostgreSQL database
-- [x] SQLAlchemy integration
-- [x] User authentication structure
-- [ ] Complete Sign Up / Login UI
-- [ ] User dashboard
-- [ ] Snake Game
-- [ ] Turtle Race
-- [ ] Daily 3-game limit
-- [ ] Coin reward system
-- [ ] Vending machine interface
-- [ ] Product purchasing
-- [ ] Purchase history
-- [ ] Bill generation
-- [ ] Email bill delivery
-- [ ] Protected admin dashboard
-- [ ] Admin product management
-- [ ] Expanded database records
-- [ ] UI/UX improvements
-
-The checklist will be updated as development progresses.
+Open the local address shown in the terminal to access the application.
 
 ---
 
-## 🔒 Security & Data
+# 🔐 Authentication & Security
 
-The project uses environment variables for sensitive configuration such as:
+The application provides authentication for both normal users and administrators.
 
-- Database credentials
-- Flask secret key
-- Email credentials
+### Users can:
 
-Sensitive files and local database-related files are excluded from version control.
+- Register
+- Log in
+- Access the 8-BIT application
+- Play games
+- Earn coins
+- Purchase products
+- Receive purchase bills
 
-Passwords are handled using secure password hashing rather than storing plain-text passwords.
+### Administrators can:
 
----
+- Access the protected admin panel
+- Monitor application statistics
+- Manage vending machine products
+- Enable/disable games
+- Configure game rewards
+- View user information
+- Monitor recent game and coin activity
 
-## 💡 Future Improvements
+Passwords are handled using password hashing rather than being stored as plain text.
 
-Possible future additions include:
-
-- 🏆 Leaderboards for game scores
-- 🎮 More mini-games
-- 🎁 Daily rewards
-- 🪙 Different coin/reward systems
-- 📦 Product inventory tracking
-- 📈 Admin statistics and analytics
-- 🧾 Improved invoice generation
-- 📧 More email notifications
-- 👤 User purchase history
-- 🔐 Improved admin authentication
-- 🎨 More detailed 8-bit animations and effects
-- 📱 Better responsive design
+Sensitive configuration is kept in environment variables.
 
 ---
 
-## 🎯 Project Goal
+# 🧾 Purchase Flow
 
-The goal of **8-BIT Vending Machine** is to combine a fun retro gaming experience with a practical database-driven application.
-
-Rather than creating a simple vending machine interface, the project demonstrates how multiple components can work together:
+A complete purchase follows this process:
 
 ```text
-Frontend
-   ↓
-Flask Backend
-   ↓
-Business Logic
-   ↓
-SQLAlchemy
-   ↓
-PostgreSQL
-   ↓
-Persistent Records
+User
+ │
+ ├── Select Product
+ │
+ ├── Select Quantity
+ │
+ ▼
+Check Coin Balance
+ │
+ ▼
+Calculate Total
+ │
+ ▼
+Deduct Coins
+ │
+ ▼
+Create Order
+ │
+ ▼
+Create Order Items
+ │
+ ▼
+Record Transaction
+ │
+ ▼
+Generate Bill
+ │
+ ▼
+Send Bill by Email
 ```
 
-The gaming system, virtual currency, vending machine, authentication, admin management, and purchase system all operate as parts of one database-backed application.
+This ensures that the purchase is represented as an actual database transaction.
 
 ---
 
-> **🕹️ Play hard. Score high. Earn coins. Get your snacks.**
+# 📊 Admin Activity Overview
 
-> *"In this vending machine, you don't just buy your snacks — you earn them."* 🚀
+The admin panel provides a high-level view of how the application is being used.
+
+```text
+              ADMIN PANEL
+                   │
+       ┌───────────┼───────────┐
+       ▼           ▼           ▼
+    USERS        COINS       GAMES
+       │           │           │
+       ▼           ▼           ▼
+  Registered    Earned       Played
+   Players       Spent       Today
+       │           │           │
+       └───────────┼───────────┘
+                   ▼
+            Recent Activity
+               Past 5 Days
+```
+
+This turns the admin panel into more than a simple CRUD interface: it provides an overview of the application's users, virtual economy, games, and vending machine activity.
+
+---
+
+# 🎯 Project Goal
+
+The goal of **8-BIT Studios** is to combine a retro gaming experience with a practical database management system.
+
+Instead of building a simple vending machine, the project connects several systems together:
+
+```text
+Authentication
+      ↓
+Game System
+      ↓
+Coin Economy
+      ↓
+Vending Machine
+      ↓
+Purchase System
+      ↓
+Email Billing
+      ↓
+PostgreSQL
+      ↓
+Admin Analytics
+```
+
+The result is a complete database-backed application where gameplay, rewards, purchases, users, and administrative activity are connected through a single system.
+
+---
+
+# 🕹️ Final Flow
+
+```text
+        👤 REGISTER
+             │
+             ▼
+         🔐 LOGIN
+             │
+             ▼
+       🎮 PLAY GAMES
+        ╱           ╲
+       ▼             ▼
+   🐍 SNAKE     🐢 TURTLE RACE
+       ╲             ╱
+        ▼           ▼
+          🪙 EARN COINS
+               │
+               ▼
+        🥤 VENDING MACHINE
+               │
+               ▼
+         🛒 BUY PRODUCTS
+               │
+               ▼
+         🧾 GENERATE BILL
+               │
+               ▼
+          📧 EMAIL BILL
+```
+
+---
+
+<p align="center">
+  <strong>🕹️ Play hard. Score high. Earn coins. Get your snacks.</strong>
+</p>
+
+<p align="center">
+  <i>In 8-BIT, you don't just buy your snacks — you earn them.</i> 🚀
+</p>
