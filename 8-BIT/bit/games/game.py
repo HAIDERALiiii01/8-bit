@@ -2,10 +2,11 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy import func
 from extensions import db
-from models import Game, GameSessions, CoinTransactions # adjust the name to your model
+from models import Game, GameSessions, CoinTransactions, Orders, OrderItems, Products
 
 KARACHI = ZoneInfo("Asia/Karachi")
 PLAYS_PER_GAME_PER_DAY = 3
+EXTRA_BIT_PRODUCT_NAME = "Extra Bit"  # must match Products.product_name exactly
 
 
 def day_start_utc():
@@ -19,13 +20,32 @@ def get_game(game_name):
     return Game.query.filter_by(game_name=game_name).first()
 
 
+def extra_lives_today(user_id):
+    """How many Extra Bit units the user has bought today (each unit = +1 play,
+    applied to every game). Counts quantity, not just purchase count, so
+    buying 2 in one order grants +2."""
+    total = (
+        db.session.query(func.coalesce(func.sum(OrderItems.quantity), 0))
+        .join(Orders, OrderItems.order_id == Orders.order_id)
+        .join(Products, OrderItems.product_id == Products.product_id)
+        .filter(
+            Orders.user_id == user_id,
+            Orders.purchased_at >= day_start_utc(),
+            Products.product_name == EXTRA_BIT_PRODUCT_NAME,
+        )
+        .scalar()
+    )
+    return int(total)
+
+
 def plays_left(user_id, game_name):
     used = GameSessions.query.filter(
         GameSessions.user_id == user_id,
         GameSessions.game_id == get_game(game_name).game_id,
         GameSessions.played_at >= day_start_utc(),
     ).count()
-    return max(0, PLAYS_PER_GAME_PER_DAY - used)
+    bonus = extra_lives_today(user_id)
+    return max(0, PLAYS_PER_GAME_PER_DAY + bonus - used)
 
 
 def get_coins(user_id):

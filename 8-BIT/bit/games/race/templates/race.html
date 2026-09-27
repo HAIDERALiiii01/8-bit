@@ -181,24 +181,56 @@
   }
   .hint.empty { color: var(--neon-pink); }
 
-  /* ---- leaderboard dropdown ---- */
-  .leaderboard-wrap {
-    margin-top: 16px;
+  /* ---- leaderboard popup ---- */
+  .leaderboard-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 7, 22, 0.82);
+    z-index: 50;
+    padding: 20px;
   }
-  .leaderboard-panel {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.25s ease;
+  .leaderboard-modal.show { display: flex; }
+  .leaderboard-box {
+    position: relative;
+    background: var(--bg-panel);
+    border: 4px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 20px 20px;
+    width: 100%;
+    max-width: 340px;
+    box-shadow:
+      0 0 0 4px #0a0716,
+      0 0 0 8px var(--neon-cyan),
+      0 18px 40px rgba(0,0,0,0.6);
+  }
+  .leaderboard-box h2 {
+    margin: 0 0 14px;
+    font-size: 12px;
+    text-align: center;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px rgba(255,212,71,0.7), 2px 2px 0 #6b4a00;
+    letter-spacing: 1px;
+  }
+  .leaderboard-close {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    line-height: 1;
+    font-size: 12px;
+    border-radius: 50%;
+    background: var(--neon-pink);
+    box-shadow: 0 3px 0 #8f2560;
+  }
+  .leaderboard-inner {
     background: #0a0716;
     border: 3px solid #000;
     border-radius: 4px;
-    margin-top: 0;
-  }
-  .leaderboard-panel.open {
-    max-height: 320px;
-    margin-top: 10px;
-  }
-  .leaderboard-inner {
     padding: 12px 14px;
   }
   .leaderboard-loading,
@@ -252,7 +284,7 @@
     </select>
     <button id="startBtn">START RACE</button>
     <button id="muteBtn">&#128264; MUSIC OFF</button>
-    <button id="leaderboardBtn" class="secondary" type="button">&#127942; Show High Score</button>
+    <button id="leaderboardBtn" class="secondary" type="button">&#127942; TOP 5</button>
   </div>
 
   <div class="screen-wrap">
@@ -260,8 +292,10 @@
     <div class="scanlines"></div>
   </div>
 
-  <div class="leaderboard-wrap">
-    <div class="leaderboard-panel" id="leaderboardPanel">
+  <div class="leaderboard-modal" id="leaderboardModal">
+    <div class="leaderboard-box">
+      <button class="leaderboard-close" id="leaderboardClose" type="button" aria-label="Close">&#10005;</button>
+      <h2>&#127942; TOP 5 &mdash; MOST WINS</h2>
       <div class="leaderboard-inner">
         <div class="leaderboard-loading" id="leaderboardLoading">LOADING...</div>
         <div class="leaderboard-empty" id="leaderboardEmpty" style="display:none;">NO WINS RECORDED YET</div>
@@ -452,7 +486,7 @@ function announceResult(winnerColor, won, awarded, coinsTotal, playsLeft) {
 
   // this race may have changed the standings -- force a fresh fetch next open
   leaderboardLoaded = false;
-  if (leaderboardPanel.classList.contains('open')) {
+  if (leaderboardModal.classList.contains('show')) {
     loadLeaderboard();
   }
 }
@@ -560,9 +594,10 @@ document.getElementById('startBtn').addEventListener('click', () => {
   runRace(prediction);
 });
 
-// ---- Top 5 leaderboard dropdown: fetched lazily on first open, re-fetched after each race ----
+// ---- Top 5 leaderboard popup: fetched lazily on first open, re-fetched after each race ----
 const leaderboardBtn = document.getElementById('leaderboardBtn');
-const leaderboardPanel = document.getElementById('leaderboardPanel');
+const leaderboardModal = document.getElementById('leaderboardModal');
+const leaderboardClose = document.getElementById('leaderboardClose');
 const leaderboardLoading = document.getElementById('leaderboardLoading');
 const leaderboardEmpty = document.getElementById('leaderboardEmpty');
 const leaderboardTable = document.getElementById('leaderboardTable');
@@ -593,13 +628,22 @@ async function loadLeaderboard() {
   }
 }
 
-leaderboardBtn.addEventListener('click', () => {
-  const opening = !leaderboardPanel.classList.contains('open');
-  leaderboardPanel.classList.toggle('open');
-  leaderboardBtn.innerHTML = opening ? '&#127942; HIDE High Score' : '&#127942; High Score';
-  if (opening && !leaderboardLoaded) {
-    loadLeaderboard();
-  }
+function openLeaderboard() {
+  leaderboardModal.classList.add('show');
+  if (!leaderboardLoaded) loadLeaderboard();
+}
+
+function closeLeaderboard() {
+  leaderboardModal.classList.remove('show');
+}
+
+leaderboardBtn.addEventListener('click', openLeaderboard);
+leaderboardClose.addEventListener('click', closeLeaderboard);
+leaderboardModal.addEventListener('click', (e) => {
+  if (e.target === leaderboardModal) closeLeaderboard(); // click on backdrop, not the box
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && leaderboardModal.classList.contains('show')) closeLeaderboard();
 });
 
 initTurtles();
